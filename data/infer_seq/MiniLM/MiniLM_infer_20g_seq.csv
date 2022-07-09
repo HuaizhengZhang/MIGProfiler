@@ -1,0 +1,6 @@
+,model_name,total_params,seq_length,batch_size,latency,latency_std,throughput,start_timestamp,end_timestamp,gract_mean,gract_std,fb_used_mean,fb_used_std
+0,paraphrase-multilingual-MiniLM-L12-v2,117653760,32,32,10.92,0.07,2929.12,1656768284,1656768404,0.176,0.055,2110.322,5.883
+1,paraphrase-multilingual-MiniLM-L12-v2,117653760,64,32,10.96,0.11,2920.3,1656768414,1656768534,0.29,0.049,2142.57,4.708
+2,paraphrase-multilingual-MiniLM-L12-v2,117653760,128,32,15.6,0.01,2050.79,1656768544,1656768664,0.451,0.068,2198.107,9.778
+3,paraphrase-multilingual-MiniLM-L12-v2,117653760,256,32,36.21,0.01,883.78,1656768674,1656768794,0.536,0.057,2376.521,26.087
+4,paraphrase-multilingual-MiniLM-L12-v2,117653760,512,32,101.03,0.02,316.75,1656768805,1656768925,0.606,0.063,3050.8,2.182

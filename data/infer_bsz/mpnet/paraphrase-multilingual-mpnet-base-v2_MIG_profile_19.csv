@@ -1,0 +1,10 @@
+model_name,total_params,seq_length,batch_size,latency,latency_std,throughput,start_timestamp,end_timestamp
+paraphrase-multilingual-mpnet-base-v2,278043648,64,1,11.0,0.08,90.88,1656795951,1656796071
+paraphrase-multilingual-mpnet-base-v2,278043648,64,2,10.99,0.04,182.0,1656796081,1656796201
+paraphrase-multilingual-mpnet-base-v2,278043648,64,4,11.6,0.04,344.78,1656796211,1656796331
+paraphrase-multilingual-mpnet-base-v2,278043648,64,8,14.48,0.02,552.33,1656796341,1656796461
+paraphrase-multilingual-mpnet-base-v2,278043648,64,16,27.03,0.03,591.92,1656796471,1656796591
+paraphrase-multilingual-mpnet-base-v2,278043648,64,32,53.23,0.02,601.18,1656796601,1656796721
+paraphrase-multilingual-mpnet-base-v2,278043648,64,64,101.95,0.02,627.77,1656796732,1656796852
+paraphrase-multilingual-mpnet-base-v2,278043648,64,128,201.62,0.03,634.87,1656796865,1656796985
+paraphrase-multilingual-mpnet-base-v2,278043648,64,256,400.24,0.06,639.61,1656797001,1656797121

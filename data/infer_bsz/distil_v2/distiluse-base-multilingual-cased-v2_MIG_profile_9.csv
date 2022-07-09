@@ -1,0 +1,10 @@
+model_name,total_params,seq_length,batch_size,latency,latency_std,throughput,start_timestamp,end_timestamp
+distiluse-base-multilingual-cased-v2,134734080,64,1,5.57,0.03,179.6,1656783367,1656783487
+distiluse-base-multilingual-cased-v2,134734080,64,2,5.51,0.06,362.97,1656783497,1656783617
+distiluse-base-multilingual-cased-v2,134734080,64,4,5.8,0.03,689.24,1656783627,1656783747
+distiluse-base-multilingual-cased-v2,134734080,64,8,5.43,0.02,1474.65,1656783757,1656783877
+distiluse-base-multilingual-cased-v2,134734080,64,16,5.56,0.02,2878.28,1656783887,1656784007
+distiluse-base-multilingual-cased-v2,134734080,64,32,7.83,0.01,4085.56,1656784017,1656784137
+distiluse-base-multilingual-cased-v2,134734080,64,64,14.48,0.01,4418.38,1656784147,1656784267
+distiluse-base-multilingual-cased-v2,134734080,64,128,29.35,0.01,4360.66,1656784277,1656784397
+distiluse-base-multilingual-cased-v2,134734080,64,256,57.05,0.01,4487.07,1656784407,1656784527

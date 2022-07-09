@@ -1,0 +1,12 @@
+arch: vision_transformer
+feature_extract: false
+num_classes: 365
+workers: 6
+data_path: /root/TorchScene/places365_standard/
+batch_sizes:
+- 8
+- 16
+- 32
+lr: 1.0e-05
+momentum: 0.9
+device: cuda:0

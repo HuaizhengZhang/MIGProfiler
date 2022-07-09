@@ -1,0 +1,12 @@
+- model_name=distil_v1
+- fixed_time=True
+- mig_profile_id=0
+- result_dir=/root/infer_test/A100-infer_results/data/infer/distil_v1/
+- 'test_args=[{seq_length: 64, batch_size: 1},{seq_length: 64, batch_size: 2},{seq_length:
+  64, batch_size: 4},{seq_length: 64,batch_size: 8},{seq_length: 64, batch_size: 16},{seq_length:
+  64, batch_size: 32},{seq_length: 64, batch_size: 64},{seq_length: 64, batch_size:
+  128},{seq_length: 64, batch_size: 256}]'
+- dcgm.group_id=5
+- dcgm.instance_id=0
+- dcgm.mig_profile_id=0
+- dcgm.save_dir=/root/infer_test/A100-infer_results/data/infer/distil_v1/

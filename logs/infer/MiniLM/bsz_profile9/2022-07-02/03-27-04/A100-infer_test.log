@@ -1,0 +1,5 @@
+[2022-07-02 03:27:04,785][MiniLM][INFO] - dcgm recorder process 8053 started!
+[2022-07-02 03:28:56,678][datasets.builder][WARNING] - Reusing dataset amazon_reviews_multi (/root/.cache/huggingface/datasets/amazon_reviews_multi/all_languages/1.0.0/724e94f4b0c6c405ce7e476a6c5ef4f87db30799ad49f765094cf9770e0f7609)
+[2022-07-02 03:29:06,364][datasets.arrow_dataset][WARNING] - Loading cached processed dataset at /root/.cache/huggingface/datasets/amazon_reviews_multi/all_languages/1.0.0/724e94f4b0c6c405ce7e476a6c5ef4f87db30799ad49f765094cf9770e0f7609/cache-da19664ef0911dfa.arrow
+[2022-07-02 03:48:47,305][MiniLM][INFO] - dcgm process is terminated.
+[2022-07-02 03:48:47,306][MiniLM][INFO] - inference completed.

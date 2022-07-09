@@ -1,0 +1,6 @@
+,model_name,total_params,seq_length,batch_size,latency,latency_std,throughput,start_timestamp,end_timestamp,gract_mean,gract_std,fb_used_mean,fb_used_std
+0,distiluse-base-multilingual-cased-v2,134734080,32,32,13.3,0.01,2406.81,1656766704,1656766824,0.454,0.143,2129.322,22.53
+1,distiluse-base-multilingual-cased-v2,134734080,64,32,26.5,0.01,1207.61,1656766834,1656766954,0.577,0.105,2217.917,17.501
+2,distiluse-base-multilingual-cased-v2,134734080,128,32,53.97,0.02,592.91,1656766964,1656767084,0.691,0.106,2348.628,29.484
+3,distiluse-base-multilingual-cased-v2,134734080,256,32,116.75,0.03,274.08,1656767095,1656767215,0.722,0.071,2657.455,58.381
+4,distiluse-base-multilingual-cased-v2,134734080,512,32,274.93,0.05,116.39,1656767228,1656767348,0.766,0.08,3702.942,155.735

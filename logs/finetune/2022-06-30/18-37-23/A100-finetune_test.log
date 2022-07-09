@@ -1,0 +1,202 @@
+[2022-06-30 18:37:23,578][vision_transformer][INFO] - getting model 'vision_transformer' from torch hub
+[2022-06-30 18:37:24,756][vision_transformer][INFO] - model: 'VisionTransformer' is successfully loaded
+[2022-06-30 18:37:24,757][vision_transformer][INFO] - model structure: VisionTransformer(
+  (conv_proj): Conv2d(3, 768, kernel_size=(16, 16), stride=(16, 16))
+  (encoder): Encoder(
+    (dropout): Dropout(p=0.0, inplace=False)
+    (layers): Sequential(
+      (encoder_layer_0): EncoderBlock(
+        (ln_1): LayerNorm((768,), eps=1e-06, elementwise_affine=True)
+        (self_attention): MultiheadAttention(
+          (out_proj): NonDynamicallyQuantizableLinear(in_features=768, out_features=768, bias=True)
+        )
+        (dropout): Dropout(p=0.0, inplace=False)
+        (ln_2): LayerNorm((768,), eps=1e-06, elementwise_affine=True)
+        (mlp): MLPBlock(
+          (linear_1): Linear(in_features=768, out_features=3072, bias=True)
+          (act): GELU()
+          (dropout_1): Dropout(p=0.0, inplace=False)
+          (linear_2): Linear(in_features=3072, out_features=768, bias=True)
+          (dropout_2): Dropout(p=0.0, inplace=False)
+        )
+      )
+      (encoder_layer_1): EncoderBlock(
+        (ln_1): LayerNorm((768,), eps=1e-06, elementwise_affine=True)
+        (self_attention): MultiheadAttention(
+          (out_proj): NonDynamicallyQuantizableLinear(in_features=768, out_features=768, bias=True)
+        )
+        (dropout): Dropout(p=0.0, inplace=False)
+        (ln_2): LayerNorm((768,), eps=1e-06, elementwise_affine=True)
+        (mlp): MLPBlock(
+          (linear_1): Linear(in_features=768, out_features=3072, bias=True)
+          (act): GELU()
+          (dropout_1): Dropout(p=0.0, inplace=False)
+          (linear_2): Linear(in_features=3072, out_features=768, bias=True)
+          (dropout_2): Dropout(p=0.0, inplace=False)
+        )
+      )
+      (encoder_layer_2): EncoderBlock(
+        (ln_1): LayerNorm((768,), eps=1e-06, elementwise_affine=True)
+        (self_attention): MultiheadAttention(
+          (out_proj): NonDynamicallyQuantizableLinear(in_features=768, out_features=768, bias=True)
+        )
+        (dropout): Dropout(p=0.0, inplace=False)
+        (ln_2): LayerNorm((768,), eps=1e-06, elementwise_affine=True)
+        (mlp): MLPBlock(
+          (linear_1): Linear(in_features=768, out_features=3072, bias=True)
+          (act): GELU()
+          (dropout_1): Dropout(p=0.0, inplace=False)
+          (linear_2): Linear(in_features=3072, out_features=768, bias=True)
+          (dropout_2): Dropout(p=0.0, inplace=False)
+        )
+      )
+      (encoder_layer_3): EncoderBlock(
+        (ln_1): LayerNorm((768,), eps=1e-06, elementwise_affine=True)
+        (self_attention): MultiheadAttention(
+          (out_proj): NonDynamicallyQuantizableLinear(in_features=768, out_features=768, bias=True)
+        )
+        (dropout): Dropout(p=0.0, inplace=False)
+        (ln_2): LayerNorm((768,), eps=1e-06, elementwise_affine=True)
+        (mlp): MLPBlock(
+          (linear_1): Linear(in_features=768, out_features=3072, bias=True)
+          (act): GELU()
+          (dropout_1): Dropout(p=0.0, inplace=False)
+          (linear_2): Linear(in_features=3072, out_features=768, bias=True)
+          (dropout_2): Dropout(p=0.0, inplace=False)
+        )
+      )
+      (encoder_layer_4): EncoderBlock(
+        (ln_1): LayerNorm((768,), eps=1e-06, elementwise_affine=True)
+        (self_attention): MultiheadAttention(
+          (out_proj): NonDynamicallyQuantizableLinear(in_features=768, out_features=768, bias=True)
+        )
+        (dropout): Dropout(p=0.0, inplace=False)
+        (ln_2): LayerNorm((768,), eps=1e-06, elementwise_affine=True)
+        (mlp): MLPBlock(
+          (linear_1): Linear(in_features=768, out_features=3072, bias=True)
+          (act): GELU()
+          (dropout_1): Dropout(p=0.0, inplace=False)
+          (linear_2): Linear(in_features=3072, out_features=768, bias=True)
+          (dropout_2): Dropout(p=0.0, inplace=False)
+        )
+      )
+      (encoder_layer_5): EncoderBlock(
+        (ln_1): LayerNorm((768,), eps=1e-06, elementwise_affine=True)
+        (self_attention): MultiheadAttention(
+          (out_proj): NonDynamicallyQuantizableLinear(in_features=768, out_features=768, bias=True)
+        )
+        (dropout): Dropout(p=0.0, inplace=False)
+        (ln_2): LayerNorm((768,), eps=1e-06, elementwise_affine=True)
+        (mlp): MLPBlock(
+          (linear_1): Linear(in_features=768, out_features=3072, bias=True)
+          (act): GELU()
+          (dropout_1): Dropout(p=0.0, inplace=False)
+          (linear_2): Linear(in_features=3072, out_features=768, bias=True)
+          (dropout_2): Dropout(p=0.0, inplace=False)
+        )
+      )
+      (encoder_layer_6): EncoderBlock(
+        (ln_1): LayerNorm((768,), eps=1e-06, elementwise_affine=True)
+        (self_attention): MultiheadAttention(
+          (out_proj): NonDynamicallyQuantizableLinear(in_features=768, out_features=768, bias=True)
+        )
+        (dropout): Dropout(p=0.0, inplace=False)
+        (ln_2): LayerNorm((768,), eps=1e-06, elementwise_affine=True)
+        (mlp): MLPBlock(
+          (linear_1): Linear(in_features=768, out_features=3072, bias=True)
+          (act): GELU()
+          (dropout_1): Dropout(p=0.0, inplace=False)
+          (linear_2): Linear(in_features=3072, out_features=768, bias=True)
+          (dropout_2): Dropout(p=0.0, inplace=False)
+        )
+      )
+      (encoder_layer_7): EncoderBlock(
+        (ln_1): LayerNorm((768,), eps=1e-06, elementwise_affine=True)
+        (self_attention): MultiheadAttention(
+          (out_proj): NonDynamicallyQuantizableLinear(in_features=768, out_features=768, bias=True)
+        )
+        (dropout): Dropout(p=0.0, inplace=False)
+        (ln_2): LayerNorm((768,), eps=1e-06, elementwise_affine=True)
+        (mlp): MLPBlock(
+          (linear_1): Linear(in_features=768, out_features=3072, bias=True)
+          (act): GELU()
+          (dropout_1): Dropout(p=0.0, inplace=False)
+          (linear_2): Linear(in_features=3072, out_features=768, bias=True)
+          (dropout_2): Dropout(p=0.0, inplace=False)
+        )
+      )
+      (encoder_layer_8): EncoderBlock(
+        (ln_1): LayerNorm((768,), eps=1e-06, elementwise_affine=True)
+        (self_attention): MultiheadAttention(
+          (out_proj): NonDynamicallyQuantizableLinear(in_features=768, out_features=768, bias=True)
+        )
+        (dropout): Dropout(p=0.0, inplace=False)
+        (ln_2): LayerNorm((768,), eps=1e-06, elementwise_affine=True)
+        (mlp): MLPBlock(
+          (linear_1): Linear(in_features=768, out_features=3072, bias=True)
+          (act): GELU()
+          (dropout_1): Dropout(p=0.0, inplace=False)
+          (linear_2): Linear(in_features=3072, out_features=768, bias=True)
+          (dropout_2): Dropout(p=0.0, inplace=False)
+        )
+      )
+      (encoder_layer_9): EncoderBlock(
+        (ln_1): LayerNorm((768,), eps=1e-06, elementwise_affine=True)
+        (self_attention): MultiheadAttention(
+          (out_proj): NonDynamicallyQuantizableLinear(in_features=768, out_features=768, bias=True)
+        )
+        (dropout): Dropout(p=0.0, inplace=False)
+        (ln_2): LayerNorm((768,), eps=1e-06, elementwise_affine=True)
+        (mlp): MLPBlock(
+          (linear_1): Linear(in_features=768, out_features=3072, bias=True)
+          (act): GELU()
+          (dropout_1): Dropout(p=0.0, inplace=False)
+          (linear_2): Linear(in_features=3072, out_features=768, bias=True)
+          (dropout_2): Dropout(p=0.0, inplace=False)
+        )
+      )
+      (encoder_layer_10): EncoderBlock(
+        (ln_1): LayerNorm((768,), eps=1e-06, elementwise_affine=True)
+        (self_attention): MultiheadAttention(
+          (out_proj): NonDynamicallyQuantizableLinear(in_features=768, out_features=768, bias=True)
+        )
+        (dropout): Dropout(p=0.0, inplace=False)
+        (ln_2): LayerNorm((768,), eps=1e-06, elementwise_affine=True)
+        (mlp): MLPBlock(
+          (linear_1): Linear(in_features=768, out_features=3072, bias=True)
+          (act): GELU()
+          (dropout_1): Dropout(p=0.0, inplace=False)
+          (linear_2): Linear(in_features=3072, out_features=768, bias=True)
+          (dropout_2): Dropout(p=0.0, inplace=False)
+        )
+      )
+      (encoder_layer_11): EncoderBlock(
+        (ln_1): LayerNorm((768,), eps=1e-06, elementwise_affine=True)
+        (self_attention): MultiheadAttention(
+          (out_proj): NonDynamicallyQuantizableLinear(in_features=768, out_features=768, bias=True)
+        )
+        (dropout): Dropout(p=0.0, inplace=False)
+        (ln_2): LayerNorm((768,), eps=1e-06, elementwise_affine=True)
+        (mlp): MLPBlock(
+          (linear_1): Linear(in_features=768, out_features=3072, bias=True)
+          (act): GELU()
+          (dropout_1): Dropout(p=0.0, inplace=False)
+          (linear_2): Linear(in_features=3072, out_features=768, bias=True)
+          (dropout_2): Dropout(p=0.0, inplace=False)
+        )
+      )
+    )
+    (ln): LayerNorm((768,), eps=1e-06, elementwise_affine=True)
+  )
+  (heads): Linear(in_features=768, out_features=365, bias=True)
+)
+[2022-06-30 18:37:24,757][vision_transformer][INFO] - starting dcgm recoder subprocess...
+[2022-06-30 18:37:24,775][vision_transformer][INFO] - dcgm recoder process pid=5467 is running now.
+[2022-06-30 18:37:24,776][vision_transformer][INFO] - Params to learn:
+	class_token	conv_proj.weight	conv_proj.bias	encoder.pos_embedding	encoder.layers.encoder_layer_0.ln_1.weight	encoder.layers.encoder_layer_0.ln_1.bias	encoder.layers.encoder_layer_0.self_attention.in_proj_weight	encoder.layers.encoder_layer_0.self_attention.in_proj_bias	encoder.layers.encoder_layer_0.self_attention.out_proj.weight	encoder.layers.encoder_layer_0.self_attention.out_proj.bias	encoder.layers.encoder_layer_0.ln_2.weight	encoder.layers.encoder_layer_0.ln_2.bias	encoder.layers.encoder_layer_0.mlp.linear_1.weight	encoder.layers.encoder_layer_0.mlp.linear_1.bias	encoder.layers.encoder_layer_0.mlp.linear_2.weight	encoder.layers.encoder_layer_0.mlp.linear_2.bias	encoder.layers.encoder_layer_1.ln_1.weight	encoder.layers.encoder_layer_1.ln_1.bias	encoder.layers.encoder_layer_1.self_attention.in_proj_weight	encoder.layers.encoder_layer_1.self_attention.in_proj_bias	encoder.layers.encoder_layer_1.self_attention.out_proj.weight	encoder.layers.encoder_layer_1.self_attention.out_proj.bias	encoder.layers.encoder_layer_1.ln_2.weight	encoder.layers.encoder_layer_1.ln_2.bias	encoder.layers.encoder_layer_1.mlp.linear_1.weight	encoder.layers.encoder_layer_1.mlp.linear_1.bias	encoder.layers.encoder_layer_1.mlp.linear_2.weight	encoder.layers.encoder_layer_1.mlp.linear_2.bias	encoder.layers.encoder_layer_2.ln_1.weight	encoder.layers.encoder_layer_2.ln_1.bias	encoder.layers.encoder_layer_2.self_attention.in_proj_weight	encoder.layers.encoder_layer_2.self_attention.in_proj_bias	encoder.layers.encoder_layer_2.self_attention.out_proj.weight	encoder.layers.encoder_layer_2.self_attention.out_proj.bias	encoder.layers.encoder_layer_2.ln_2.weight	encoder.layers.encoder_layer_2.ln_2.bias	encoder.layers.encoder_layer_2.mlp.linear_1.weight	encoder.layers.encoder_layer_2.mlp.linear_1.bias	encoder.layers.encoder_layer_2.mlp.linear_2.weight	encoder.layers.encoder_layer_2.mlp.linear_2.bias	encoder.layers.encoder_layer_3.ln_1.weight	encoder.layers.encoder_layer_3.ln_1.bias	encoder.layers.encoder_layer_3.self_attention.in_proj_weight	encoder.layers.encoder_layer_3.self_attention.in_proj_bias	encoder.layers.encoder_layer_3.self_attention.out_proj.weight	encoder.layers.encoder_layer_3.self_attention.out_proj.bias	encoder.layers.encoder_layer_3.ln_2.weight	encoder.layers.encoder_layer_3.ln_2.bias	encoder.layers.encoder_layer_3.mlp.linear_1.weight	encoder.layers.encoder_layer_3.mlp.linear_1.bias	encoder.layers.encoder_layer_3.mlp.linear_2.weight	encoder.layers.encoder_layer_3.mlp.linear_2.bias	encoder.layers.encoder_layer_4.ln_1.weight	encoder.layers.encoder_layer_4.ln_1.bias	encoder.layers.encoder_layer_4.self_attention.in_proj_weight	encoder.layers.encoder_layer_4.self_attention.in_proj_bias	encoder.layers.encoder_layer_4.self_attention.out_proj.weight	encoder.layers.encoder_layer_4.self_attention.out_proj.bias	encoder.layers.encoder_layer_4.ln_2.weight	encoder.layers.encoder_layer_4.ln_2.bias	encoder.layers.encoder_layer_4.mlp.linear_1.weight	encoder.layers.encoder_layer_4.mlp.linear_1.bias	encoder.layers.encoder_layer_4.mlp.linear_2.weight	encoder.layers.encoder_layer_4.mlp.linear_2.bias	encoder.layers.encoder_layer_5.ln_1.weight	encoder.layers.encoder_layer_5.ln_1.bias	encoder.layers.encoder_layer_5.self_attention.in_proj_weight	encoder.layers.encoder_layer_5.self_attention.in_proj_bias	encoder.layers.encoder_layer_5.self_attention.out_proj.weight	encoder.layers.encoder_layer_5.self_attention.out_proj.bias	encoder.layers.encoder_layer_5.ln_2.weight	encoder.layers.encoder_layer_5.ln_2.bias	encoder.layers.encoder_layer_5.mlp.linear_1.weight	encoder.layers.encoder_layer_5.mlp.linear_1.bias	encoder.layers.encoder_layer_5.mlp.linear_2.weight	encoder.layers.encoder_layer_5.mlp.linear_2.bias	encoder.layers.encoder_layer_6.ln_1.weight	encoder.layers.encoder_layer_6.ln_1.bias	encoder.layers.encoder_layer_6.self_attention.in_proj_weight	encoder.layers.encoder_layer_6.self_attention.in_proj_bias	encoder.layers.encoder_layer_6.self_attention.out_proj.weight	encoder.layers.encoder_layer_6.self_attention.out_proj.bias	encoder.layers.encoder_layer_6.ln_2.weight	encoder.layers.encoder_layer_6.ln_2.bias	encoder.layers.encoder_layer_6.mlp.linear_1.weight	encoder.layers.encoder_layer_6.mlp.linear_1.bias	encoder.layers.encoder_layer_6.mlp.linear_2.weight	encoder.layers.encoder_layer_6.mlp.linear_2.bias	encoder.layers.encoder_layer_7.ln_1.weight	encoder.layers.encoder_layer_7.ln_1.bias	encoder.layers.encoder_layer_7.self_attention.in_proj_weight	encoder.layers.encoder_layer_7.self_attention.in_proj_bias	encoder.layers.encoder_layer_7.self_attention.out_proj.weight	encoder.layers.encoder_layer_7.self_attention.out_proj.bias	encoder.layers.encoder_layer_7.ln_2.weight	encoder.layers.encoder_layer_7.ln_2.bias	encoder.layers.encoder_layer_7.mlp.linear_1.weight	encoder.layers.encoder_layer_7.mlp.linear_1.bias	encoder.layers.encoder_layer_7.mlp.linear_2.weight	encoder.layers.encoder_layer_7.mlp.linear_2.bias	encoder.layers.encoder_layer_8.ln_1.weight	encoder.layers.encoder_layer_8.ln_1.bias	encoder.layers.encoder_layer_8.self_attention.in_proj_weight	encoder.layers.encoder_layer_8.self_attention.in_proj_bias	encoder.layers.encoder_layer_8.self_attention.out_proj.weight	encoder.layers.encoder_layer_8.self_attention.out_proj.bias	encoder.layers.encoder_layer_8.ln_2.weight	encoder.layers.encoder_layer_8.ln_2.bias	encoder.layers.encoder_layer_8.mlp.linear_1.weight	encoder.layers.encoder_layer_8.mlp.linear_1.bias	encoder.layers.encoder_layer_8.mlp.linear_2.weight	encoder.layers.encoder_layer_8.mlp.linear_2.bias	encoder.layers.encoder_layer_9.ln_1.weight	encoder.layers.encoder_layer_9.ln_1.bias	encoder.layers.encoder_layer_9.self_attention.in_proj_weight	encoder.layers.encoder_layer_9.self_attention.in_proj_bias	encoder.layers.encoder_layer_9.self_attention.out_proj.weight	encoder.layers.encoder_layer_9.self_attention.out_proj.bias	encoder.layers.encoder_layer_9.ln_2.weight	encoder.layers.encoder_layer_9.ln_2.bias	encoder.layers.encoder_layer_9.mlp.linear_1.weight	encoder.layers.encoder_layer_9.mlp.linear_1.bias	encoder.layers.encoder_layer_9.mlp.linear_2.weight	encoder.layers.encoder_layer_9.mlp.linear_2.bias	encoder.layers.encoder_layer_10.ln_1.weight	encoder.layers.encoder_layer_10.ln_1.bias	encoder.layers.encoder_layer_10.self_attention.in_proj_weight	encoder.layers.encoder_layer_10.self_attention.in_proj_bias	encoder.layers.encoder_layer_10.self_attention.out_proj.weight	encoder.layers.encoder_layer_10.self_attention.out_proj.bias	encoder.layers.encoder_layer_10.ln_2.weight	encoder.layers.encoder_layer_10.ln_2.bias	encoder.layers.encoder_layer_10.mlp.linear_1.weight	encoder.layers.encoder_layer_10.mlp.linear_1.bias	encoder.layers.encoder_layer_10.mlp.linear_2.weight	encoder.layers.encoder_layer_10.mlp.linear_2.bias	encoder.layers.encoder_layer_11.ln_1.weight	encoder.layers.encoder_layer_11.ln_1.bias	encoder.layers.encoder_layer_11.self_attention.in_proj_weight	encoder.layers.encoder_layer_11.self_attention.in_proj_bias	encoder.layers.encoder_layer_11.self_attention.out_proj.weight	encoder.layers.encoder_layer_11.self_attention.out_proj.bias	encoder.layers.encoder_layer_11.ln_2.weight	encoder.layers.encoder_layer_11.ln_2.bias	encoder.layers.encoder_layer_11.mlp.linear_1.weight	encoder.layers.encoder_layer_11.mlp.linear_1.bias	encoder.layers.encoder_layer_11.mlp.linear_2.weight	encoder.layers.encoder_layer_11.mlp.linear_2.bias	encoder.ln.weight	encoder.ln.bias	heads.weight	heads.bias
+[2022-06-30 18:37:34,815][vision_transformer][INFO] - Initializing Datasets and Dataloaders...
+[2022-06-30 18:37:34,815][vision_transformer][INFO] - loading training data from /root/TorchScene/places365_standard/
+[2022-06-30 18:40:03,105][vision_transformer][INFO] - benchmark testing completed
+[2022-06-30 18:40:13,629][vision_transformer][INFO] - batch size:8, latency_mean:157.6928376155113, leantency_std:0.040161154976597724, throughput:50.73153683432156, start_timestamp:1656585482, end_timestamp:1656585603
+[2022-06-30 18:40:23,842][vision_transformer][INFO] - Initializing Datasets and Dataloaders...
+[2022-06-30 18:40:23,842][vision_transformer][INFO] - loading training data from /root/TorchScene/places365_standard/

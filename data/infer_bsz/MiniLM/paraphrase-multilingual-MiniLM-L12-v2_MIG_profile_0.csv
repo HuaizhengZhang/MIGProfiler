@@ -1,0 +1,10 @@
+model_name,total_params,seq_length,batch_size,latency,latency_std,throughput,start_timestamp,end_timestamp
+paraphrase-multilingual-MiniLM-L12-v2,117653760,64,1,11.43,0.04,87.46,1656787188,1656787308
+paraphrase-multilingual-MiniLM-L12-v2,117653760,64,2,11.78,0.08,169.81,1656787318,1656787438
+paraphrase-multilingual-MiniLM-L12-v2,117653760,64,4,11.03,0.03,362.73,1656787448,1656787568
+paraphrase-multilingual-MiniLM-L12-v2,117653760,64,8,11.06,0.06,723.28,1656787578,1656787698
+paraphrase-multilingual-MiniLM-L12-v2,117653760,64,16,10.75,0.03,1488.01,1656787708,1656787828
+paraphrase-multilingual-MiniLM-L12-v2,117653760,64,32,10.85,0.03,2949.71,1656787838,1656787958
+paraphrase-multilingual-MiniLM-L12-v2,117653760,64,64,10.84,0.04,5906.51,1656787968,1656788088
+paraphrase-multilingual-MiniLM-L12-v2,117653760,64,128,12.07,0.03,10608.26,1656788098,1656788218
+paraphrase-multilingual-MiniLM-L12-v2,117653760,64,256,23.79,0.01,10759.63,1656788228,1656788348

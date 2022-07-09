@@ -1,0 +1,6 @@
+model_name,total_params,seq_length,batch_size,latency,latency_std,throughput,start_timestamp,end_timestamp
+distiluse-base-multilingual-cased-v2,134734080,32,32,6.41,0.03,4991.85,1656765914,1656766034
+distiluse-base-multilingual-cased-v2,134734080,64,32,12.24,0.01,2615.35,1656766044,1656766164
+distiluse-base-multilingual-cased-v2,134734080,128,32,26.48,0.01,1208.39,1656766174,1656766294
+distiluse-base-multilingual-cased-v2,134734080,256,32,56.31,0.02,568.28,1656766304,1656766424
+distiluse-base-multilingual-cased-v2,134734080,512,32,132.95,0.04,240.69,1656766435,1656766555

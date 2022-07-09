@@ -1,0 +1,6 @@
+,model_name,batch_size,latency,latency_std,throughput,start_timestamp,end_timestamp,gract_mean,gract_std,fb_used_mean,fb_used_std
+0,vision_transformer,8,31.55,0.18,253.6,1657291817,1657291938,0.676,0.097,4328.0,0.0
+1,vision_transformer,16,43.92,0.02,364.34,1657291987,1657292108,0.802,0.118,5606.443,281.131
+2,vision_transformer,32,78.88,0.02,405.66,1657292154,1657292275,0.802,0.115,8132.0,0.0
+3,vision_transformer,64,146.78,0.02,436.04,1657292367,1657292488,0.802,0.116,12968.0,0.0
+4,vision_transformer,128,272.39,0.03,469.91,1657292601,1657292722,0.803,0.118,22706.0,0.0

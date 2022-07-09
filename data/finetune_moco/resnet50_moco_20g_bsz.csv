@@ -1,0 +1,6 @@
+model_name,batch_size,latency,latency_std,throughput,start_timestamp,end_timestamp
+resnet50_moco,8,33.75,1.18,237.06,1657283701,1657283822
+resnet50_moco,16,50.55,0.02,316.53,1657284075,1657284196
+resnet50_moco,32,90.47,0.02,353.72,1657284470,1657284591
+resnet50_moco,64,169.06,0.02,378.56,1657284688,1657284809
+resnet50_moco,128,0,0,0,0,0

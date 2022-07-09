@@ -1,0 +1,6 @@
+,model_name,total_params,seq_length,batch_size,latency,latency_std,throughput,start_timestamp,end_timestamp,gract_mean,gract_std,fb_used_mean,fb_used_std
+0,paraphrase-multilingual-mpnet-base-v2,278043648,32,32,11.36,0.08,2816.51,1656771165,1656771285,0.354,0.11,2788.636,3.983
+1,paraphrase-multilingual-mpnet-base-v2,278043648,64,32,15.62,0.02,2049.27,1656771295,1656771415,0.504,0.089,2856.074,10.14
+2,paraphrase-multilingual-mpnet-base-v2,278043648,128,32,31.63,0.01,1011.6,1656771425,1656771545,0.629,0.093,2947.314,18.469
+3,paraphrase-multilingual-mpnet-base-v2,278043648,256,32,70.11,0.02,456.44,1656771556,1656771676,0.673,0.07,3125.826,34.765
+4,paraphrase-multilingual-mpnet-base-v2,278043648,512,32,165.55,0.08,193.3,1656771688,1656771808,0.723,0.074,3896.6,4.363
