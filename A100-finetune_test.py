@@ -17,7 +17,6 @@ pd.set_option('display.max_columns', None)
 DCGM_GTOUP_ID = 15
 DCGM_INSTANCE_ID = 0
 
-
 # gpu metric reference: https://docs.nvidia.com/datacenter/dcgm/latest/dcgm-user-guide/feature-overview.html#profiling-metrics
 
 

@@ -20,6 +20,7 @@ short_name = {
         'bert-base-multilingual-cased': "bert-base",
     }
 
+
 def set_size(width, fraction=1):
     """ Set aesthetic figure dimensions to avoid scaling in latex.
     Parameters
@@ -117,8 +118,8 @@ def model_compare_draw(result: pd.DataFrame, result_dir):
     fbusd_list = []
     fbusd_std_list = []
     result = result.drop(result[(result.batch_size!=result.loc[1, 'batch_size'])&(result.seq_length!=result.loc[1, 'seq_length'])].index)
-    for instance, model_instance_group in result.groupby('instance_memory'):
-        instances += [str(instance) + 'g']
+    for instance, model_instance_group in result.groupby('mig_profile'):
+        instances += [str(instance)]
         latency_list += [model_instance_group.loc[:, 'latency']]
         latency_std_list += [model_instance_group.loc[:, 'latency_std']]
         throughput_list += [model_instance_group.loc[:, 'throughput']]
@@ -175,7 +176,7 @@ def model_compare_draw(result: pd.DataFrame, result_dir):
     )
 
 
-def multi_instance_draw(result: pd.DataFrame, result_dir):
+def infer_draw(result: pd.DataFrame, picture_dir):
 
     for model_name, model_group in result.groupby('model_name'):
         instances = []
@@ -186,8 +187,8 @@ def multi_instance_draw(result: pd.DataFrame, result_dir):
         gract_std_list = []
         fbusd_list = []
         fbusd_std_list = []
-        for instance, model_instance_group in model_group.groupby('instance_memory'):
-            instances += [str(instance)+'g']
+        for instance, model_instance_group in model_group.groupby('mig_profile'):
+            instances += [str(instance)]
             latency_list += [model_instance_group.loc[:, 'latency']]
             latency_std_list += [model_instance_group.loc[:, 'latency_std']]
             throughput_list += [model_instance_group.loc[:, 'throughput']]
@@ -203,7 +204,7 @@ def multi_instance_draw(result: pd.DataFrame, result_dir):
             title=model_name,
             x_axis_name="sequence length",
             y_axis_name="FB used",
-            save_path=f"{result_dir}{short_name[model_name]}_fbusd_seq_compare.svg",
+            save_path=f"{picture_dir}{short_name[model_name]}_fbusd_seq_compare.svg",
             legend_pos='upper right',
             barlabel_fmt='%.0f'
         )
@@ -215,7 +216,7 @@ def multi_instance_draw(result: pd.DataFrame, result_dir):
             x_labels=model_instance_group.loc[:, 'seq_length'],
             x_axis_name="sequence length",
             y_axis_name="Graphics Engine Activity",
-            save_path=f"{result_dir}{short_name[model_name]}_gract_seq_compare.svg",
+            save_path=f"{picture_dir}{short_name[model_name]}_gract_seq_compare.svg",
             legend_pos='upper right',
             barlabel_fmt='%.2f'
         )
@@ -227,7 +228,7 @@ def multi_instance_draw(result: pd.DataFrame, result_dir):
             x_labels=model_instance_group.loc[:, 'seq_length'],
             x_axis_name="sequence length",
             y_axis_name="latency(ms)",
-            save_path=f"{result_dir}{short_name[model_name]}_latency_seq_compare.svg",
+            save_path=f"{picture_dir}{short_name[model_name]}_latency_seq_compare.svg",
             legend_pos='upper right',
             barlabel_fmt='%.0f'
         )
@@ -238,13 +239,13 @@ def multi_instance_draw(result: pd.DataFrame, result_dir):
             x_labels=model_instance_group.loc[:, 'seq_length'],
             x_axis_name="sequence length",
             y_axis_name="throughput(/s)",
-            save_path=f"{result_dir}{short_name[model_name]}_throughput_seq_compare.svg",
+            save_path=f"{picture_dir}{short_name[model_name]}_throughput_seq_compare.svg",
             legend_pos='upper right',
             barlabel_fmt='%.0f'
         )
 
 
-def finetune_draw(result: pd.DataFrame, result_dir):
+def finetune_draw(result: pd.DataFrame, picture_dir):
     instances = []
     latency_list = []
     latency_std_list = []
@@ -252,7 +253,7 @@ def finetune_draw(result: pd.DataFrame, result_dir):
     gract_list = []
     gract_std_list = []
     fb_used_list = []
-    for instance, mig in result.groupby('mig'):
+    for instance, mig in result.groupby('mig_profile'):
         instances += [str(instance)]
         latency_list += [mig.loc[:, 'latency'].values.tolist()]
         latency_std_list += [mig.loc[:, 'latency_std'].values.tolist()]
@@ -267,7 +268,7 @@ def finetune_draw(result: pd.DataFrame, result_dir):
         title="moco resnet50 finetune",
         x_axis_name="batch size",
         y_axis_name="FB used",
-        save_path=f"{result_dir}mocov2_resnet50_fbusd_bsz_compare.svg",
+        save_path=f"{picture_dir}mocov2_resnet50_fbusd_bsz_compare.svg",
         legend_pos="upper right",
         barlabel_fmt='%.0f'
     )
@@ -279,7 +280,7 @@ def finetune_draw(result: pd.DataFrame, result_dir):
         title="moco resnet50 finetune",
         x_axis_name="batch size",
         y_axis_name="GRACT",
-        save_path=f"{result_dir}mocov2_resnet50_gract_bsz_compare.svg",
+        save_path=f"{picture_dir}mocov2_resnet50_gract_bsz_compare.svg",
         legend_pos="upper right",
         barlabel_fmt='%.2f'
     )
@@ -291,7 +292,7 @@ def finetune_draw(result: pd.DataFrame, result_dir):
         title="moco resnet50 finetune",
         x_axis_name="batch size",
         y_axis_name="latency(ms)",
-        save_path=f"{result_dir}mocov2_resnet50_latency_bsz_compare.svg",
+        save_path=f"{picture_dir}mocov2_resnet50_latency_bsz_compare.svg",
         legend_pos="upper right",
         barlabel_fmt='%.0f'
     )
@@ -302,32 +303,11 @@ def finetune_draw(result: pd.DataFrame, result_dir):
         title="moco resnet50 finetune",
         x_axis_name="batch size",
         y_axis_name="throughput(/s)",
-        save_path=f"{result_dir}mocov2_resnet50_throughput_bsz_compare.svg",
+        save_path=f"{picture_dir}mocov2_resnet50_throughput_bsz_compare.svg",
         legend_pos="upper right",
         barlabel_fmt='%.0f'
     )
 
-def draw_pictures(result: pd.DataFrame, result_dir):
-    if not os.path.exists(result_dir):
-        os.mkdir(result_dir)
-    #single_instance_draw(result, result_dir)
-    #multi_instance_draw(result, result_dir)
-    finetune_draw(result, result_dir)
-    #model_compare_draw(result, result_dir)
 
 
-if __name__ == '__main__':
-    """ result_5g = pd.read_csv("data/infer_seq/mpnet/mpnet_infer_05g_seq.csv")
-    result_10g = pd.read_csv("data/infer_seq/mpnet/mpnet_infer_10g_seq.csv")
-    result_20g = pd.read_csv("data/infer_seq/mpnet/mpnet_infer_20g_seq.csv")
-    result_40g = pd.read_csv("data/infer_seq/mpnet/mpnet_infer_40g_seq.csv")
-    result_5g['instance_memory'] = ['5'] * len(result_5g)
-    result_10g['instance_memory'] = ["10"] * len(result_5g)
-    result_20g['instance_memory'] = ["20"] * len(result_5g)
-    result_40g['instance_memory'] = ["40"] * len(result_5g)
-    result_5g.to_csv("data/infer_seq/mpnet/mpnet_seq.csv", mode='a', header=True, index=False)
-    result_10g.to_csv("data/infer_seq/mpnet/mpnet_seq.csv", mode='a', header=False, index=False)
-    result_20g.to_csv("data/infer_seq/mpnet/mpnet_seq.csv", mode='a', header=False, index=False)
-    result_40g.to_csv("data/infer_seq/mpnet/mpnet_seq.csv", mode='a', header=False, index=False)"""
-    result = pd.read_csv("data/finetune_moco/moco_finetune.csv")
-    draw_pictures(result, result_dir="pictures/finetune/moco/")
+
