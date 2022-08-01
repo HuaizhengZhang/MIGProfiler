@@ -77,7 +77,6 @@ def my_plotter(legends, means_list, x_labels, title, y_axis_name, x_axis_name, s
     fig, ax = plt.subplots(1, 1, figsize=set_size(WIDTH))
     y_limit = float(max([max(means) for means in means_list]))*1.4
     index = np.arange(len(x_labels), step=1)
-    print(index)
     ax.plot()
     for i, legend in enumerate(legends):
         if i < len(means_list):
