@@ -131,8 +131,6 @@ pip install -r requirements.txt
 
    The `infer.sh` is for inference experiments of all 5 nlp models on all 4 MIG profiling( 20 experiments in total ). Assign proper values for `result_dir` and `test_args` and `hydra.run.dir` by yourself to correctly run the experiments.
 
-<<<<<<<<< Temporary merge branch 1
-=========
    Then run:
 
    ```shell
