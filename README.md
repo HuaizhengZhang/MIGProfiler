@@ -104,7 +104,7 @@ pip install -r requirements.txt
 
    `hydra.run.dir`: directory of hydra logger files
 
-3. Run the benchmark script
+   #### Run the benchmark script
 
    ```shell
    model_names=('distil_v1' 'distil_v2' 'MiniLM' 'mpnet' 'bert-base')
@@ -132,10 +132,10 @@ pip install -r requirements.txt
    The `infer.sh` is for inference experiments of all 5 nlp models on all 4 MIG profiling( 20 experiments in total ). Assign proper values for `result_dir` and `test_args` and `hydra.run.dir` by yourself to correctly run the experiments.
 
    Then run:
-   
+
    ```shell
    bash infer.sh
    ```
-   
+
    
 
