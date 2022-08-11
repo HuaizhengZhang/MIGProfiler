@@ -1,7 +1,6 @@
-import builtins
 import os
 import subprocess
-import warnings
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -10,20 +9,22 @@ import time
 import hydra
 import torch
 from omegaconf import DictConfig
-from torch import nn, optim
+from torch import nn
 from torch.utils.data import DataLoader
 from torchvision import datasets, transforms
 import torchvision.models as models
-import torch.distributed as dist
 import moco.loader
 import moco.builder
-import torch.multiprocessing as mp
-import random
-import torch.backends.cudnn as cudnn
 
 pd.set_option('display.max_columns', None)
 DCGM_GTOUP_ID = 15
 DCGM_INSTANCE_ID = 0
+a100_80g_mig_profile_name_map = {
+    0: '7g.80gb',
+    9: '3g.40gb',
+    14: '2g.20gb',
+    19: '1g.10gb'
+}
 
 
 # gpu metric reference: https://docs.nvidia.com/datacenter/dcgm/latest/dcgm-user-guide/feature-overview.html#profiling-metrics
@@ -32,35 +33,52 @@ DCGM_INSTANCE_ID = 0
 @hydra.main(version_base=None, config_path='configs', config_name='moco_pretrain')
 def main(cfg: DictConfig):
     logger = logging.getLogger(cfg.arch + ' pretrain')
+    mig_profile = a100_80g_mig_profile_name_map[cfg.mig_profile_id]
     # start dcgm monitoring
     try:
         logger.info("starting dcgm recoder subprocess...")
-        p = subprocess.Popen(['python', '/root/infer_test/dcgm_recorder.py'])
+        p = subprocess.Popen([
+            'python', cfg.dcgm.exc_path, 'group_id={}'.format(cfg.dcgm.group_id),  'instance_id={}'.format(cfg.dcgm.instance_id), 'save_dir={}'.format(cfg.dcgm.save_dir)
+        ])
         logger.info("dcgm recoder process pid={} is running now.".format(p.pid))
 
     except Exception as e:
         logger.info("dcgm recorder failed: {}".format(e))
     try:
-        # create model
-        print("=> creating model '{}'".format(cfg.arch))
-        model = moco.builder.MoCo(
+        for batch_size in cfg.batch_sizes:
+            # create model
+            logger.info("=> creating model '{}'".format(cfg.arch))
+            model = moco.builder.MoCo(
             models.__dict__[cfg.arch],
             cfg.moco_dim, cfg.moco_k, cfg.moco_m, cfg.moco_t, cfg.mlp)
-        print(model)
-        model.cuda()
-        model = torch.nn.parallel.DistributedDataParallel(model)
+            model = model.cuda(cfg.gpu)
 
-        # define loss function (criterion) and optimizer
-        criterion = nn.CrossEntropyLoss().cuda(cfg.gpu)
-        optimizer = torch.optim.SGD(model.parameters(), cfg.lr,
-                                    momentum=cfg.momentum,
-                                    weight_decay=cfg.weight_decay)
-        train_loader = load_data(cfg.data, cfg.batch_size, cfg.workers, cfg.aug_plus)
-        latency_mean, latency_std, throughput, start_timestamp, end_timestamp = \
-            fixed_time_pretrain_benchmark(model, 120, criterion, train_loader, cfg, optimizer)
-        print(
-            "batch_size:{}, latency_mean:{}, latency_std:{}, throughput:{}, start_timestamp:{}, end_timestamp:{}".format(
-                cfg.batch_size, latency_mean, latency_std, throughput, start_timestamp, end_timestamp))
+            # define loss function (criterion) and optimizer
+            criterion = nn.CrossEntropyLoss().cuda(cfg.gpu)
+            optimizer = torch.optim.SGD(model.parameters(), cfg.lr,
+                                        momentum=cfg.momentum,
+                                        weight_decay=cfg.weight_decay)
+            train_loader = load_data(cfg.data, batch_size, cfg.workers, cfg.aug_plus)
+            latency_mean, latency_std, throughput, start_timestamp, end_timestamp = \
+                fixed_time_pretrain_benchmark(model, 120, criterion, train_loader, cfg, optimizer)
+            model = model.to('cpu')
+            torch.cuda.empty_cache()
+            result = pd.DataFrame([(cfg.arch, mig_profile, batch_size, latency_mean, latency_std, throughput,
+                                   start_timestamp, end_timestamp)],
+                                  columns=['model_name', 'mig_profile', 'batch_size',
+                                           'latency_mean', 'latency_std', 'throughput',
+                                           'start_timestamp', 'end_timestamp'])
+            if not Path(cfg.result_dir).exists():
+                os.makedirs(cfg.result_dir)
+            save_file = (Path(cfg.result_dir) / '{}_MIG_profile_{}.csv'.format(cfg.arch, cfg.mig_profile_id))
+            if save_file.exists():
+                result.to_csv(save_file, header=False, mode='a')
+            else:
+                result.to_csv(save_file, header=True, mode='w')
+            logger.info(
+                "batch_size:{}, mig_profile:{}, latency_mean:{}, latency_std:{}, throughput:{}, "
+                "start_timestamp:{}, end_timestamp:{}".format(
+                    batch_size, mig_profile, latency_mean, latency_std, throughput, start_timestamp, end_timestamp))
 
     except Warning as w:
         logger.warning(f"dcgm process{p.pid} closed due of interruption:{w}")
@@ -98,6 +116,13 @@ def fixed_time_pretrain_benchmark(model, fixed_time, criterion, dataloader, args
     throughput = float(1000 * total_sample) / np.sum(latency)
     latency_mean = np.mean(latency)
     latency_std = np.std(latency)
+    images[0] = images[0].to('cpu')
+    images[1] = images[1].to('cpu')
+    output = output.to('cpu')
+    target = target.to('cpu')
+    loss = loss.to('cpu')
+    torch.cuda.empty_cache()
+    del output, target, loss
 
     return latency_mean, latency_std, throughput, start_timestamp, end_timestamp
 
