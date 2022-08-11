@@ -3,16 +3,9 @@ from typing import Union
 import pandas as pd
 import numpy as np
 from pathlib import Path
-profile_map = {
-    '0': '7g.40gb',
-    '9': '3g.20gb',
-    '14': '3g.10gb',
-    '19': '1g.5gb',
-}
 
 
 def timestamps_align(record_file_path: Union[str, Path], dcgm_file_path: Union[str, Path]):
-    mig_profile_name = profile_map[str(record_file_path).split('.')[-2].split('_')[-1]]
     infer_res = pd.read_csv(record_file_path)
     dcgm_res = pd.read_csv(dcgm_file_path)
     for index in range(len(infer_res)):
@@ -33,13 +26,13 @@ def timestamps_align(record_file_path: Union[str, Path], dcgm_file_path: Union[s
         infer_res.loc[index, 'gract_std'] = round(gract_std, 3)
         infer_res.loc[index, 'fb_used_mean'] = round(fb_used_mean, 3)
         infer_res.loc[index, 'fb_used_std'] = round(fb_used_std, 3)
-    infer_res['mig_profile'] = [mig_profile_name] * len(infer_res)
     return infer_res
 
 
 def gather_from_profiles(results_dir: Union[str, Path], dcgm_file_path: Union[str, Path]):
     result_of_profiles = []
     model_name = str(results_dir).split('/')[-1].split('\\')[-1]
+    assert Path(results_dir).exists() and Path(dcgm_file_path).exists()
     for file in Path(results_dir).rglob('*MIG*'):
         result_of_profiles.append(timestamps_align(file, dcgm_file_path))
     gathered = pd.concat(result_of_profiles)
@@ -47,5 +40,8 @@ def gather_from_profiles(results_dir: Union[str, Path], dcgm_file_path: Union[st
 
 
 def main():
-    gather_from_profiles('E:/InferFinetuneBenchmark/data/infer_bsz/bert-base',
-                         'E:/InferFinetuneBenchmark/data/infer_bsz/dcgm.csv')
+    gather_from_profiles('E:/InferFinetuneBenchmark/data/pretrain_resnet50_moco',
+                         'E:/InferFinetuneBenchmark/data/pretrain_resnet50_moco/dcgm.csv')
+
+if __name__ == '__main__':
+    main()

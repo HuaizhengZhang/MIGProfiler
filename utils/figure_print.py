@@ -1,5 +1,3 @@
-import os
-
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib as mpl
@@ -81,9 +79,9 @@ def my_plotter(legends, means_list, x_labels, title, y_axis_name, x_axis_name, s
     for i, legend in enumerate(legends):
         if i < len(means_list):
             if std_list is None:
-                bar = ax.bar(index + 0.2 * i - 0.3, means_list[i], color=COLOR_LIST[i], label=str(legend)+'g' , width=0.15)
+                bar = ax.bar(index + 0.2 * i - 0.3, means_list[i], color=COLOR_LIST[i], label=str(legend) , width=0.15)
             else:
-                bar = ax.bar(index+0.2*i-0.3, means_list[i], yerr=std_list[i], color=COLOR_LIST[i], label=legend+'g', width=0.15)
+                bar = ax.bar(index+0.2*i-0.3, means_list[i], yerr=std_list[i], color=COLOR_LIST[i], label=legend, width=0.15)
             ax.bar_label(bar, label_type='edge', fmt=barlabel_fmt, fontsize=4)
 
     plt.margins(x=0.08)
@@ -100,7 +98,7 @@ def my_plotter(legends, means_list, x_labels, title, y_axis_name, x_axis_name, s
     yticks[0].label1.set_visible(False)
     yticks[1].label1.set_visible(False)
 
-    ax.legend(loc=legend_pos,ncol=2, fontsize=13)
+    ax.legend(loc=legend_pos, ncol=2, fontsize=13)
     plt.title(title, fontsize=13)
     plt.tight_layout()
     plt.savefig(save_path, format='svg')
@@ -254,7 +252,7 @@ def finetune_draw(result: pd.DataFrame, picture_dir):
     fb_used_list = []
     for instance, mig in result.groupby('mig_profile'):
         instances += [str(instance)]
-        latency_list += [mig.loc[:, 'latency'].values.tolist()]
+        latency_list += [mig.loc[:, 'latency_mean'].values.tolist()]
         latency_std_list += [mig.loc[:, 'latency_std'].values.tolist()]
         throughput_list += [mig.loc[:, 'throughput'].values.tolist()]
         gract_list += [mig.loc[:, 'gract_mean'].values.tolist()]
@@ -263,7 +261,7 @@ def finetune_draw(result: pd.DataFrame, picture_dir):
     my_plotter(
         legends=instances,
         means_list=fb_used_list,
-        x_labels=[8,16,32,64,128],
+        x_labels=[8,16,32,64,128, 256],
         title="moco resnet50 finetune",
         x_axis_name="batch size",
         y_axis_name="FB used",
@@ -275,7 +273,7 @@ def finetune_draw(result: pd.DataFrame, picture_dir):
         legends=instances,
         means_list=gract_list,
         std_list=gract_std_list,
-        x_labels=[8, 16, 32, 64, 128],
+        x_labels=[8, 16, 32, 64, 128, 256],
         title="moco resnet50 finetune",
         x_axis_name="batch size",
         y_axis_name="GRACT",
@@ -287,7 +285,7 @@ def finetune_draw(result: pd.DataFrame, picture_dir):
         legends=instances,
         means_list=latency_list,
         std_list=latency_std_list,
-        x_labels=[8, 16, 32, 64, 128],
+        x_labels=[8, 16, 32, 64, 128, 256],
         title="moco resnet50 finetune",
         x_axis_name="batch size",
         y_axis_name="latency(ms)",
@@ -298,7 +296,7 @@ def finetune_draw(result: pd.DataFrame, picture_dir):
     my_plotter(
         legends=instances,
         means_list=throughput_list,
-        x_labels=[8, 16, 32, 64, 128],
+        x_labels=[8, 16, 32, 64, 128, 256],
         title="moco resnet50 finetune",
         x_axis_name="batch size",
         y_axis_name="throughput(/s)",
@@ -309,4 +307,6 @@ def finetune_draw(result: pd.DataFrame, picture_dir):
 
 
 
-
+if __name__ == '__main__':
+    result = pd.read_csv('E:\InferFinetuneBenchmark\data\pretrain_resnet50_moco\pretrain_resnet50_moco.csv')
+    finetune_draw(result, "E:\InferFinetuneBenchmark\pictures/train/resnet50_moco/")
