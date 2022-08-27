@@ -1,0 +1,11 @@
+model_name: vision_transformer
+result_dir: /root/A100-benchmark/data/infer/cv/
+mig_profile: disable
+fixed_time: 120
+batch_size: 256
+data_path: /root/places365_standard/
+workers: 6
+gpu: 0
+hydra:
+  run:
+    dir: /root/A100-benchmark/logs/infer/cv/${now:%Y-%m-%d}/${now:%H-%M-%S}

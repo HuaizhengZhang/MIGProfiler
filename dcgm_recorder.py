@@ -1,6 +1,7 @@
-import logging
 import os
 import subprocess
+from pathlib import Path
+
 import hydra
 import pandas as pd
 import time
@@ -20,7 +21,7 @@ def main(cfg: DictConfig):
         save_dir = cfg.save_dir
         if not os.path.exists(save_dir):
             os.makedirs(save_dir)
-        save_path = save_dir + 'dcgm.csv'
+        save_path = Path(save_dir) / 'dcgm.csv'
         while not dcgm.poll():
             line = dcgm.stdout.readline().split()
             timestamp = int(time.time())
