@@ -1,0 +1,11 @@
+model_name: bert-base
+result_dir: /root/A100-benchmark/data/infer/nlp/
+mig_profile: disable
+fixed_time: 120
+seq_length: 64
+batch_size: 32
+workers: 6
+gpu: 0
+hydra:
+  run:
+    dir: /root/A100-benchmark/logs/infer/nlp/${now:%Y-%m-%d}/${now:%H-%M-%S}
