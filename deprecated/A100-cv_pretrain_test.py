@@ -26,11 +26,9 @@ a100_80g_mig_profile_name_map = {
     19: '1g.10gb'
 }
 
-
 # gpu metric reference: https://docs.nvidia.com/datacenter/dcgm/latest/dcgm-user-guide/feature-overview.html#profiling-metrics
 
-
-@hydra.main(version_base=None, config_path='configs', config_name='moco_pretrain')
+@hydra.main(version_base=None, config_path='../configs', config_name='moco_pretrain')
 def main(cfg: DictConfig):
     logger = logging.getLogger(cfg.arch + ' pretrain')
     mig_profile = a100_80g_mig_profile_name_map[cfg.mig_profile_id]

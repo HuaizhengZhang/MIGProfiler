@@ -17,7 +17,6 @@ def main(cfg: DictConfig):
             stderr=subprocess.PIPE,
             encoding="utf-8")
         cnt = 0
-        first_row = True
         save_dir = cfg.save_dir
         if not os.path.exists(save_dir):
             os.makedirs(save_dir)
@@ -30,9 +29,8 @@ def main(cfg: DictConfig):
             if 'GPU-I' in line and int(line[1]) == cfg.instance_id:
                 line += [timestamp]
                 df = pd.DataFrame([line[1:]], columns=['EntityId', 'GRACT', 'FBUSD', 'TimeStamp'])
-                if first_row:
+                if not save_path.exists():
                     df.to_csv(save_path, mode='a', header=True, index=False)
-                    first_row = False
                 else:
                     df.to_csv(save_path, mode='a', header=False, index=False)
     except Exception as e:

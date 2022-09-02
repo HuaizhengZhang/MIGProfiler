@@ -1,4 +1,4 @@
-model_names=('vision_transformer' 'resnet50')
+model_names=('vision_transformer' 'resnet50' 'swin_transformer')
 group_id=2
 profile_ids=(0 9 14 19)
 declare -A profile_device
@@ -13,20 +13,17 @@ profile_name[9]='3g.40gb'
 profile_name[14]='2g.20gb'
 profile_name[19]='1g.10gb'
 
-batch_sizes=(1 2 4 8 16 32 64 128 256)
+batch_sizes=(8 16 32 64 128 256)
 
 function batch_size_benchmark {
   for batch_size in ${batch_sizes[*]}
   do
       echo "model_name=$model_name, profile_device=${profile_name[$1]}, batch_size=$batch_size"
-      CUDA_VISIBLE_DEVICES=${profile_device[$1]} python A100-cv-infer_test.py \
+      CUDA_VISIBLE_DEVICES=${profile_device[$1]} python A100-cv-train_test.py \
       "model_name=${model_name}" "mig_profile=${profile_name[$1]}" "batch_size=${batch_size}"
   done
   return 0
 }
-python dcgm_recorder.py "group_id=${group_id}" "save_dir=/root/A100-benchmark/data/infer/cv/"&
-pid=$!
-echo "dcgm process(pid=$pid) is running"
 for model_name in ${model_names[*]}
 do
   for profile_id in ${profile_ids[*]}
@@ -35,7 +32,10 @@ do
     sudo nvidia-smi mig -dci
     sudo nvidia-smi mig -dgi
     sudo nvidia-smi mig -cgi "${profile_id}" -C
+    python dcgm_recorder.py "group_id=${group_id}" "save_dir=/root/A100-benchmark/data/train/cv/"&
+    pid=$!
+    echo "dcgm process(pid=$pid) is running"
     batch_size_benchmark "$profile_id"
+    kill $pid
   done
 done
-kill $pid

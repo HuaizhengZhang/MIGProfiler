@@ -7,19 +7,11 @@ import logging
 import time
 import hydra
 import torch
-from datasets import load_dataset
 from omegaconf import DictConfig
-from torch.utils.data import DataLoader, default_collate
 from tqdm import tqdm
-from transformers import AutoTokenizer, AutoModel
 
-models = {
-    'distil_v1': 'sentence-transformers/distiluse-base-multilingual-cased-v1',
-    'distil_v2': 'sentence-transformers/distiluse-base-multilingual-cased-v2',
-    'MiniLM': 'sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2',
-    'mpnet': 'sentence-transformers/paraphrase-multilingual-mpnet-base-v2',
-    'bert-base': 'bert-base-multilingual-cased',
-}
+from utils.data_hub import load_amazaon_review_data
+from utils.model_hub import load_nlp_model
 
 
 @hydra.main(version_base=None, config_path='configs', config_name='nlp_infer')
@@ -29,9 +21,9 @@ def main(cfg: DictConfig):
         os.makedirs(cfg.result_dir)
     # create model
     logger.info("getting model '{}' from torch hub".format(cfg.model_name))
-    model = AutoModel.from_pretrained(models[cfg.model_name])
+    model = load_nlp_model(cfg.model_name)
     dataloader = load_amazaon_review_data(
-        model_name=models[cfg.model_name],
+        model_name=cfg.model_name,
         seq_length=cfg.seq_length,
         batch_size=cfg.batch_size,
         num_workers=cfg.workers
@@ -91,26 +83,6 @@ def nlp_fixed_time_infer(model, fixed_time, dataloader, device):
     torch.cuda.empty_cache()
 
     return latency_mean, latency_std, throughput, start_timestamp, end_timestamp
-
-
-def _collate_fn(x, tokenizer, seq_length):
-    x = default_collate(x)
-    ret = tokenizer(x['review_body'], return_tensors='pt', padding=True, truncation=True, max_length=seq_length)
-    return ret
-
-
-def load_amazaon_review_data(model_name, seq_length, batch_size, num_workers):
-    # prepare test data
-    tokenizer = AutoTokenizer.from_pretrained(model_name)
-    test_data, _ = load_dataset("amazon_reviews_multi", "all_languages", split=['train', 'test'])
-    dataloader = DataLoader(test_data, batch_size=batch_size,
-                            collate_fn=lambda x: _collate_fn(x, tokenizer, seq_length),
-                            num_workers=num_workers)
-    return dataloader
-
-
-def count_parameters(model):
-    return sum(p.numel() for p in model.parameters() if p.requires_grad)
 
 
 if __name__ == "__main__":

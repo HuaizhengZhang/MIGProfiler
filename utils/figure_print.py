@@ -15,7 +15,9 @@ short_name = {
         'distiluse-base-multilingual-cased-v2': "distil_v2",
         'paraphrase-multilingual-MiniLM-L12-v2': "MiniLM",
         'paraphrase-multilingual-mpnet-base-v2': "mpnet",
-        'bert-base-multilingual-cased': "bert-base",
+        'bert-base': "bert-base",
+        'resnet50': 'resnet50',
+        'vision_transformer': 'vision_transformer'
     }
 
 
@@ -173,8 +175,76 @@ def model_compare_draw(result: pd.DataFrame, result_dir):
     )
 
 
-def infer_draw(result: pd.DataFrame, picture_dir):
+def bsz_draw(result: pd.DataFrame, picture_dir):
 
+    for model_name, model_group in result.groupby('model_name'):
+        instances = []
+        latency_list = []
+        latency_std_list = []
+        throughput_list = []
+        gract_list = []
+        gract_std_list = []
+        fbusd_list = []
+        fbusd_std_list = []
+        for instance, model_instance_group in model_group.groupby('mig_profile'):
+            instances += [str(instance)]
+            latency_list += [model_instance_group.loc[:, 'latency']]
+            latency_std_list += [model_instance_group.loc[:, 'latency_std']]
+            throughput_list += [model_instance_group.loc[:, 'throughput']]
+            gract_list += [model_instance_group.loc[:, 'gract_mean']]
+            gract_std_list += [model_instance_group.loc[:, 'gract_std']]
+            fbusd_list += [model_instance_group.loc[:, 'fb_used_mean']]
+            fbusd_std_list += [model_instance_group.loc[:, 'fb_used_std']]
+
+        my_plotter(
+            legends=instances,
+            means_list=fbusd_list,
+            x_labels=model_instance_group.loc[:, 'batch_size'],
+            title=model_name,
+            x_axis_name="batch size",
+            y_axis_name="FB used",
+            save_path=f"{picture_dir}/{short_name[model_name]}_fbusd_bsz_compare.svg",
+            legend_pos='upper right',
+            barlabel_fmt='%.0f'
+        )
+        my_plotter(
+            legends=instances,
+            means_list=gract_list,
+            std_list=gract_std_list,
+            title=model_name,
+            x_labels=model_instance_group.loc[:, 'batch_size'],
+            x_axis_name="batch size",
+            y_axis_name="Graphics Engine Activity",
+            save_path=f"{picture_dir}/{short_name[model_name]}_gract_bsz_compare.svg",
+            legend_pos='upper right',
+            barlabel_fmt='%.2f'
+        )
+        my_plotter(
+            legends=instances,
+            means_list=latency_list,
+            std_list=latency_std_list,
+            title=model_name,
+            x_labels=model_instance_group.loc[:, 'batch_size'],
+            x_axis_name="batch size",
+            y_axis_name="latency(ms)",
+            save_path=f"{picture_dir}/{short_name[model_name]}_latency_bsz_compare.svg",
+            legend_pos='upper right',
+            barlabel_fmt='%.0f'
+        )
+        my_plotter(
+            legends=instances,
+            means_list=throughput_list,
+            title=model_name,
+            x_labels=model_instance_group.loc[:, 'batch_size'],
+            x_axis_name="batch size",
+            y_axis_name="throughput(/s)",
+            save_path=f"{picture_dir}/{short_name[model_name]}_throughput_bsz_compare.svg",
+            legend_pos='upper right',
+            barlabel_fmt='%.0f'
+        )
+
+
+def seq_draw(result: pd.DataFrame, picture_dir):
     for model_name, model_group in result.groupby('model_name'):
         instances = []
         latency_list = []
@@ -201,7 +271,7 @@ def infer_draw(result: pd.DataFrame, picture_dir):
             title=model_name,
             x_axis_name="sequence length",
             y_axis_name="FB used",
-            save_path=f"{picture_dir}{short_name[model_name]}_fbusd_seq_compare.svg",
+            save_path=f"{picture_dir}/{short_name[model_name]}_fbusd_seq_compare.svg",
             legend_pos='upper right',
             barlabel_fmt='%.0f'
         )
@@ -213,7 +283,7 @@ def infer_draw(result: pd.DataFrame, picture_dir):
             x_labels=model_instance_group.loc[:, 'seq_length'],
             x_axis_name="sequence length",
             y_axis_name="Graphics Engine Activity",
-            save_path=f"{picture_dir}{short_name[model_name]}_gract_seq_compare.svg",
+            save_path=f"{picture_dir}/{short_name[model_name]}_gract_seq_compare.svg",
             legend_pos='upper right',
             barlabel_fmt='%.2f'
         )
@@ -225,7 +295,7 @@ def infer_draw(result: pd.DataFrame, picture_dir):
             x_labels=model_instance_group.loc[:, 'seq_length'],
             x_axis_name="sequence length",
             y_axis_name="latency(ms)",
-            save_path=f"{picture_dir}{short_name[model_name]}_latency_seq_compare.svg",
+            save_path=f"{picture_dir}/{short_name[model_name]}_latency_seq_compare.svg",
             legend_pos='upper right',
             barlabel_fmt='%.0f'
         )
@@ -236,77 +306,13 @@ def infer_draw(result: pd.DataFrame, picture_dir):
             x_labels=model_instance_group.loc[:, 'seq_length'],
             x_axis_name="sequence length",
             y_axis_name="throughput(/s)",
-            save_path=f"{picture_dir}{short_name[model_name]}_throughput_seq_compare.svg",
+            save_path=f"{picture_dir}/{short_name[model_name]}_throughput_seq_compare.svg",
             legend_pos='upper right',
             barlabel_fmt='%.0f'
         )
 
 
-def finetune_draw(result: pd.DataFrame, picture_dir):
-    instances = []
-    latency_list = []
-    latency_std_list = []
-    throughput_list = []
-    gract_list = []
-    gract_std_list = []
-    fb_used_list = []
-    for instance, mig in result.groupby('mig_profile'):
-        instances += [str(instance)]
-        latency_list += [mig.loc[:, 'latency_mean'].values.tolist()]
-        latency_std_list += [mig.loc[:, 'latency_std'].values.tolist()]
-        throughput_list += [mig.loc[:, 'throughput'].values.tolist()]
-        gract_list += [mig.loc[:, 'gract_mean'].values.tolist()]
-        gract_std_list += [mig.loc[:, 'gract_std'].values.tolist()]
-        fb_used_list += [mig.loc[:, 'fb_used_mean'].values.tolist()]
-    my_plotter(
-        legends=instances,
-        means_list=fb_used_list,
-        x_labels=[8,16,32,64,128, 256],
-        title="moco resnet50 finetune",
-        x_axis_name="batch size",
-        y_axis_name="FB used",
-        save_path=f"{picture_dir}mocov2_resnet50_fbusd_bsz_compare.svg",
-        legend_pos="upper right",
-        barlabel_fmt='%.0f'
-    )
-    my_plotter(
-        legends=instances,
-        means_list=gract_list,
-        std_list=gract_std_list,
-        x_labels=[8, 16, 32, 64, 128, 256],
-        title="moco resnet50 finetune",
-        x_axis_name="batch size",
-        y_axis_name="GRACT",
-        save_path=f"{picture_dir}mocov2_resnet50_gract_bsz_compare.svg",
-        legend_pos="upper right",
-        barlabel_fmt='%.2f'
-    )
-    my_plotter(
-        legends=instances,
-        means_list=latency_list,
-        std_list=latency_std_list,
-        x_labels=[8, 16, 32, 64, 128, 256],
-        title="moco resnet50 finetune",
-        x_axis_name="batch size",
-        y_axis_name="latency(ms)",
-        save_path=f"{picture_dir}mocov2_resnet50_latency_bsz_compare.svg",
-        legend_pos="upper right",
-        barlabel_fmt='%.0f'
-    )
-    my_plotter(
-        legends=instances,
-        means_list=throughput_list,
-        x_labels=[8, 16, 32, 64, 128, 256],
-        title="moco resnet50 finetune",
-        x_axis_name="batch size",
-        y_axis_name="throughput(/s)",
-        save_path=f"{picture_dir}mocov2_resnet50_throughput_bsz_compare.svg",
-        legend_pos="upper right",
-        barlabel_fmt='%.0f'
-    )
-
-
 
 if __name__ == '__main__':
-    result = pd.read_csv('E:\InferFinetuneBenchmark\data\pretrain_resnet50_moco\pretrain_resnet50_moco.csv')
-    finetune_draw(result, "E:\InferFinetuneBenchmark\pictures/train/resnet50_moco/")
+    result = pd.read_csv('E:\InferFinetuneBenchmark\data_v2/train/cv\integrated_result.csv')
+    bsz_draw(result, "E:\InferFinetuneBenchmark\data_v2/train/cv")

@@ -20,7 +20,7 @@ DCGM_INSTANCE_ID = 0
 # gpu metric reference: https://docs.nvidia.com/datacenter/dcgm/latest/dcgm-user-guide/feature-overview.html#profiling-metrics
 
 
-@hydra.main(version_base=None, config_path='configs', config_name='finetune')
+@hydra.main(version_base=None, config_path='../configs', config_name='finetune')
 def main(cfg: DictConfig):
     logger = logging.getLogger(cfg.arch+' finetune')
 
@@ -68,7 +68,7 @@ def main(cfg: DictConfig):
     criterion = nn.CrossEntropyLoss()
 
     # benchmark
-    easy_finetune_experiment(model=model, input_size=input_size, result_dir='./',
+    easy_finetune_experiment(model=model, input_size=input_size, result_dir='../',
                              data_path=cfg.data_path, batch_sizes=cfg.batch_sizes,
                              device=device, criterion=criterion, optimizer_ft=optimizer_ft,
                              logger=logger, fixed_time=True)
@@ -312,7 +312,7 @@ def load_places365_data(input_size, data_path, batch_size, num_workers) -> DataL
         transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
     ])
 
-    # Create training and validation datasets
+    # Create traininG dataset
     image_dataset = datasets.ImageFolder(data_path, data_transform)
     # Create training and validation dataloaders
     dataloader = torch.utils.data.DataLoader(image_dataset, batch_size=batch_size, shuffle=True,
