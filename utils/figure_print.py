@@ -312,7 +312,6 @@ def seq_draw(result: pd.DataFrame, picture_dir):
         )
 
 
-
 if __name__ == '__main__':
-    result = pd.read_csv('E:\InferFinetuneBenchmark\data_v2/train/cv\integrated_result.csv')
-    bsz_draw(result, "E:\InferFinetuneBenchmark\data_v2/train/cv")
+    result = pd.read_csv('/data/A100-80g/train/cv\integrated_result.csv')
+    bsz_draw(result, "/data/A100-80g/train/cv")

@@ -31,8 +31,8 @@ def timestamps_align(record_file_path: Union[str, Path], dcgm_file_path: Union[s
 
 
 def main():
-    timestamps_align('E:\InferFinetuneBenchmark\data_v2/train/nlp/nlp_train_bsz.csv',
-                         'E:\InferFinetuneBenchmark\data_v2/train/nlp\dcgm.csv')
+    timestamps_align('/data/A100-80g/train/nlp/nlp_train_bsz.csv',
+                     '/data/A100-80g/train/nlp\dcgm.csv')
 
 if __name__ == '__main__':
     main()

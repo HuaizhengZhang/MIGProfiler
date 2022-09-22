@@ -1,7 +1,7 @@
-# Infer_Finetune_Benchmark
-a multilingual models infering benchmark and vision transormer finetune and MoCo resnet50 finetune benchmark on Nvidia A100 device.
+# A100_Benchmark
+A benchmark script for cv and nlp tasks on Nvidia A100 mig devices.
 
-## Quick Start for NLP Inference Benchmark
+## Quick Start 
 
 #### Prepare python environments
 
@@ -14,6 +14,8 @@ pip install -r requirements.txt
 
 
 #### Prepare DCGM
+
+To monitor single mig instance performance on A100, dcgm is recommended. 
 
 1. Install Nvidia DCGM as guided [here](https://docs.nvidia.com/datacenter/dcgm/latest/user-guide/getting-started.html).
 
@@ -29,7 +31,7 @@ pip install -r requirements.txt
    dcgmi group -c my_group -a 0,i:0
    ```
 
-4. list the devices added to the group and see that the group contains the GPU (GPU:0) and GPU Instance 0. 
+4. list the devices added to the group and check if the group contains the GPU (GPU:0) and GPU Instance 0(which we are going to monitor and run the experiments on). 
 
    ```shell
    dcgmi group -l
