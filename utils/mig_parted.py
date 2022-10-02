@@ -1,6 +1,8 @@
 """
 refernce: https://github.com/nvidia/mig-parted
 """
+import subprocess
+
 
 class MIGController:
     """
@@ -28,3 +30,30 @@ class MIGController:
         pass
 
 
+def get_mig_devices(gpuID):
+    mig_devices = []
+    try:
+        process = subprocess.Popen(['nvidia-smi', '-L'],stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+        output, unused_err = process.communicate(timeout=10)
+        output = output.decode("utf-8")
+        find_gpu = False
+        for line in output.splitlines():
+            if line.strip().split(':')[0].split(' ')[0] == 'GPU':
+                if line.strip().split(':')[0].split(' ')[1] == str(gpuID):
+                    find_gpu = True
+                else:
+                    find_gpu = False
+                    continue
+            if find_gpu and line.strip().split(' ')[0] == 'MIG':
+                mig_devices.append(
+                    {
+                        'mig_name': line.strip().split(' ')[1],
+                        'uuid': line.strip().split(':')[-1].strip().split(')')[0],
+                        'instance_id': line.strip().split(':')[0].split(' ')[-1]
+                    }
+                )
+        return mig_devices
+
+    except Exception as e:
+      process.kill()
+      print(e, e.__traceback__.tb_lineno, 'nvidia-smi failed')
