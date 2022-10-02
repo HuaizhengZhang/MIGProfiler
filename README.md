@@ -1,6 +1,14 @@
 # A100_Benchmark
 A benchmark script for various deep learning workloads on Nvidia Ampere mig devices.
 
+## Software
+
+DCGM  version: 2.4.6
+
+Mig-parted version 0.5.0
+
+Python 3.9.12
+
 ## Quick Start 
 
 ### 1. Install

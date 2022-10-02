@@ -15,13 +15,12 @@ from utils.data_hub import load_places365_data
 from utils.model_hub import load_cv_model
 pynvml.nvmlInit()
 
+
 @hydra.main(version_base=None, config_path='../configs', config_name='cv_infer')
 def main(cfg: DictConfig):
-    logger = logging.getLogger(cfg.model_name+' infer')
     if not Path(cfg.result_dir).exists():
         os.makedirs(cfg.result_dir)
     # create model
-    logger.info("getting model '{}' from torch hub".format(cfg.model_name))
     model, input_size = load_cv_model(model_name=cfg.model_name)
     dataloader = load_places365_data(
             input_size=input_size,
@@ -29,7 +28,6 @@ def main(cfg: DictConfig):
             data_path=cfg.data_path,
             num_workers=cfg.workers
         )
-    logger.info("model: '{}' is successfully loaded".format(model.__class__.__name__))
     tail_latency, latency_std, throughput, power_mean, start_timestamp, end_timestamp = cv_fixed_time_infer(
         model=model, fixed_time=cfg.fixed_time,
         dataloader=dataloader, device=f'cuda:{cfg.gpu}',
@@ -52,8 +50,8 @@ def main(cfg: DictConfig):
         else:
             result.to_csv(result_file, header=True, mode='w')
     except Exception as e:
-        logger.error(f'Errors happen when try to write result to file: {result_file}, {e}')
-    logger.info(f'infer results:\n{result}')
+        print(f'Errors happen when try to write result to file: {result_file}, {e}')
+    print(f'infer results:\n{result}')
 
 
 def cv_fixed_time_infer(model, fixed_time, dataloader, device):
