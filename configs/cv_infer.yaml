@@ -1,7 +1,7 @@
 model_name: vision_transformer
 result_dir: /root/A100-benchmark/data/infer/cv/
 mig_profile: disable
-fixed_time: 120
+fixed_time: 60
 batch_size: 256
 data_path: /root/places365_standard/
 workers: 6

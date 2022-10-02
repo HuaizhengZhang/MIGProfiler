@@ -1,6 +1,7 @@
+export PYTHONPATH="${PWD}"
 model_names=('vision_transformer' 'resnet50') # the models to be tested
 group_id=2 # the dcgm group if you are going to monitor
-profile_ids=(0 9 14 19) # the profile id of the mig partition
+profile_ids=(9 14 19) # the profile id of the mig partition
 dcgm_result_dir="save_dir=/root/A100-benchmark/data/infer/cv/" # the gpu metric result are saved here
 declare -A profile_device
 # mig device name is different from gpu to gpu, assgin the correct instances names for your own experiments.
@@ -21,7 +22,7 @@ function batch_size_benchmark {
   for batch_size in ${batch_sizes[*]}
   do
       echo "model_name=$model_name, profile_device=${profile_name[$1]}, batch_size=$batch_size"
-      CUDA_VISIBLE_DEVICES=${profile_device[$1]} python A100-cv-infer_test.py \
+      CUDA_VISIBLE_DEVICES=${profile_device[$1]} python ./src/A100-cv-infer_test.py \
       "model_name=${model_name}" "mig_profile=${profile_name[$1]}" "batch_size=${batch_size}"
   done
   return 0
@@ -35,10 +36,10 @@ do
     sudo nvidia-smi mig -dci
     sudo nvidia-smi mig -dgi
     sudo nvidia-smi mig -cgi "${profile_id}" -C
-    python dcgm_recorder.py "group_id=${group_id}" $dcgm_result_dir&  # run dcgm monitor
+    python ./src/dcgm_recorder.py "group_id=${group_id}" $dcgm_result_dir || exit &  # run dcgm monitor
     pid=$!
     echo "dcgm process(pid=$pid) is running"
-    batch_size_benchmark "$profile_id"
+    batch_size_benchmark "${profile_id}" || exit
   done
 done
 # if the script is interrupted, remember to kill dcgm recorder manually!

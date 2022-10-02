@@ -8,10 +8,12 @@ import hydra
 import torch
 from omegaconf import DictConfig
 from tqdm import tqdm
+import pynvml
 
+from utils.common import p99_latency
 from utils.data_hub import load_places365_data
 from utils.model_hub import load_cv_model
-
+pynvml.nvmlInit()
 
 @hydra.main(version_base=None, config_path='../configs', config_name='cv_infer')
 def main(cfg: DictConfig):
@@ -28,16 +30,17 @@ def main(cfg: DictConfig):
             num_workers=cfg.workers
         )
     logger.info("model: '{}' is successfully loaded".format(model.__class__.__name__))
-    latency_mean, latency_std, throughput, start_timestamp, end_timestamp = cv_fixed_time_infer(
+    tail_latency, latency_std, throughput, power_mean, start_timestamp, end_timestamp = cv_fixed_time_infer(
         model=model, fixed_time=cfg.fixed_time,
         dataloader=dataloader, device=f'cuda:{cfg.gpu}',
     )
     result = pd.DataFrame({
         'model_name': [cfg.model_name],
         'batch_size':[cfg.batch_size],
-        'latency': [latency_mean],
+        'latency': [tail_latency],
         'latency_std': [latency_std],
         'throughput': [throughput],
+        'power': [power_mean],
         'start_timestamp': [start_timestamp],
         'end_timestamp': [end_timestamp],
         'mig_profile': [cfg.mig_profile]
@@ -58,6 +61,8 @@ def cv_fixed_time_infer(model, fixed_time, dataloader, device):
     model.eval()
     latency = []
     total_sample = 0
+    power_usage = []
+    handle = pynvml.nvmlDeviceGetHandleByIndex(0)
     for i, (inputs, labels) in tqdm(enumerate(dataloader)):
         inputs = inputs.to(device)
         with torch.set_grad_enabled(False):
@@ -72,15 +77,17 @@ def cv_fixed_time_infer(model, fixed_time, dataloader, device):
                 latency += [starter.elapsed_time(ender)]
                 end_timestamp = int(time.time())
                 total_sample += len(inputs)
+                power_usage += [pynvml.nvmlDeviceGetPowerUsage(handle)/1000]
         if i > 100 and end_timestamp - start_timestamp > fixed_time:
             break
     throughput = float(1000 * total_sample) / np.sum(latency)
-    latency_mean = np.mean(latency)
+    tail_latency = p99_latency(latency)
     latency_std = np.std(latency)
+    power_usage_mean = np.mean(power_usage)
     # gpu clear
     torch.cuda.empty_cache()
 
-    return latency_mean, latency_std, throughput, start_timestamp, end_timestamp
+    return tail_latency, latency_std, throughput, power_usage_mean, start_timestamp, end_timestamp
 
 
 if __name__ == "__main__":
