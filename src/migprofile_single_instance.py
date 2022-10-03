@@ -17,6 +17,7 @@ def main(cfg: DictConfig):
     model_name = cfg.model_name
     gpu_id = cfg.gpuID
     workload = cfg.workload
+    save_dir = cfg.save_dir
     dcgm_save_dir = cfg.dcgm.save_dir
     logger = logging.getLogger(f"{model_name}_{workload}")
     # enable gpu mig mode
@@ -26,7 +27,9 @@ def main(cfg: DictConfig):
         _ = stop_dcgm.communicate(timeout=30)
         enable_mig = subprocess.Popen(['nvidia-smi', '-i', str(gpu_id), '-mig', '1'])
         _ = enable_mig.communicate(timeout=30)
+        time.sleep(2)
         logger.info(f"GPU:{gpu_id} mig mode is enabled")
+
     except Exception as e:
         logger.exception(e, e.__traceback__.tb_lineno, f'enable gpu:{gpu_id} mig mode failed')
 
@@ -35,6 +38,7 @@ def main(cfg: DictConfig):
     try:
         start_dcgm = subprocess.Popen(['systemctl', 'start', 'dcgm'])
         _ = start_dcgm.communicate(timeout=30)
+        time.sleep(2)
         logger.info(f"dcgm is started")
     except Exception as e:
         logger.exception(e, e.__traceback__.tb_lineno, f'start dcgm failed')
@@ -45,6 +49,7 @@ def main(cfg: DictConfig):
                 print(os.getcwd())
                 mig_create = subprocess.Popen(['bash', './scripts/mig_controller.sh', str(gpu_id), mig_profile])
                 _ = mig_create.communicate(timeout=30)
+                time.sleep(2)
                 logger.info(f"GPU:{gpu_id} mig profile {mig_profile} is created")
             except Exception as e:
                 logger.exception(e, "mig partition failed")
@@ -63,7 +68,7 @@ def main(cfg: DictConfig):
             dcgm_proc.start()
             logger.info(f"dcgm process {dcgm_proc.pid} is monitoring")
             time.sleep(2)
-            benchmark(workload, uuid, model_name, mig_profile, gpu_id)
+            benchmark(workload, uuid, model_name, mig_profile, gpu_id, save_dir)
             logger.info(f"dcgm process {dcgm_proc.pid} is stopped")
             dcgm_proc.terminate()
 
@@ -71,12 +76,13 @@ def main(cfg: DictConfig):
         logger.exception(e, e.__traceback__.tb_lineno, 'benchmark failed')
 
 
-def benchmark(workload, cuda_device_uuid, model_name, mig_profile, gpu_id):
+def benchmark(workload, cuda_device_uuid, model_name, mig_profile, gpu_id, save_dir):
     try:
         bmk = subprocess.Popen(
-            ['bash', f'./scripts/{workload}.sh', f'{cuda_device_uuid}', f'{model_name}', f'{mig_profile}', f'{gpu_id}']
+            ['bash', f'./scripts/{workload}.sh', f'{cuda_device_uuid}', f'{model_name}', f'{mig_profile}', f'{gpu_id}', f'{save_dir}']
         )
         _ = bmk.communicate()
+        time.sleep(2)
     except Exception as e:
         print("benchmark script failed: {}".format(e))
         bmk.terminate()
@@ -84,8 +90,9 @@ def benchmark(workload, cuda_device_uuid, model_name, mig_profile, gpu_id):
 
 def dcgm(save_dir, instance_id):
     try:
+        # TODO: ONLY SUPPORT INSTANCE ID 0
         dcgm = subprocess.Popen(
-            ['dcgmi', 'dmon', '-e', '1001,252', '-i', f'i:{str(instance_id)}'],
+            ['dcgmi', 'dmon', '-e', '1001,252', '-i', f'i:0'],
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             encoding="utf-8")
@@ -106,6 +113,7 @@ def dcgm(save_dir, instance_id):
     except Exception as e:
         print("dcgm failed: {}".format(e))
         dcgm.terminate()
+
 
 if __name__ == '__main__':
     main()
