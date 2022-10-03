@@ -24,7 +24,14 @@ $ . install.sh
 ```yaml
 model_name: vision_transformer
 gpuID: 0
-train: True #False for infering, True for training tasks.
+workload: cv_infer
+save_dir: /root/A100-benchmark/data/cv_infer/
+hydra:
+  run:
+    dir: /root/MIGProfiler/logs/${now:%Y-%m-%d}/${now:%H-%M-%S}
+dcgm:
+  save_dir: /root/A100-benchmark/data/cv_infer/
+
 ```
 
 #### Run Benchmark
