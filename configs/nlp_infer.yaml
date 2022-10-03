@@ -1,5 +1,5 @@
 model_name: bert-base
-result_dir: /root/A100-benchmark/data/infer/nlp/
+result_dir: /root/A100-benchmark/data/nlp_infer/
 mig_profile: disable
 fixed_time: 120
 seq_length: 64
