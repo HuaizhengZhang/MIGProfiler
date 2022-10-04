@@ -22,37 +22,36 @@ def main(cfg: DictConfig):
     logger = logging.getLogger(f"{model_name}_{workload}")
     # enable gpu mig mode
     try:
+        logger.info("try to stop dcgm before mig partition")
         stop_dcgm = subprocess.Popen(['systemctl', 'stop', 'dcgm'])
-        logger.info("dcgm is stopped")
-        _ = stop_dcgm.communicate(timeout=30)
+        _ = stop_dcgm.communicate(timeout=5)
         enable_mig = subprocess.Popen(['nvidia-smi', '-i', str(gpu_id), '-mig', '1'])
         _ = enable_mig.communicate(timeout=30)
         time.sleep(2)
         logger.info(f"GPU:{gpu_id} mig mode is enabled")
 
-    except Exception as e:
-        logger.exception(e, e.__traceback__.tb_lineno, f'enable gpu:{gpu_id} mig mode failed')
+    except RuntimeError as e:
+        logger.error(e, e.__traceback__.tb_lineno, f'enable gpu:{gpu_id} mig mode failed')
 
     mig_profiles = ['1g.10gb', '2g.20gb', '3g.40gb', '4g.40gb', '7g.80gb']
     # start dcgm
     try:
         start_dcgm = subprocess.Popen(['systemctl', 'start', 'dcgm'])
-        _ = start_dcgm.communicate(timeout=30)
+        _ = start_dcgm.communicate(timeout=5)
         time.sleep(2)
         logger.info(f"dcgm is started")
-    except Exception as e:
-        logger.exception(e, e.__traceback__.tb_lineno, f'start dcgm failed')
+    except RuntimeError as e:
+        logger.error(e, e.__traceback__.tb_lineno, f'start dcgm failed')
     # benchmark on different mig profile instance
     try:
         for mig_profile in mig_profiles:
             try:
-                print(os.getcwd())
                 mig_create = subprocess.Popen(['bash', './scripts/mig_controller.sh', str(gpu_id), mig_profile])
                 _ = mig_create.communicate(timeout=30)
                 time.sleep(2)
                 logger.info(f"GPU:{gpu_id} mig profile {mig_profile} is created")
-            except Exception as e:
-                logger.exception(e, "mig partition failed")
+            except RuntimeError as e:
+                logger.error(e, "mig partition failed")
 
             # get mig device uuid
             target_mig_device = get_mig_devices(gpu_id)[0]
@@ -110,7 +109,7 @@ def dcgm(save_dir, instance_id):
                     df.to_csv(save_path, mode='a', header=True, index=False)
                 else:
                     df.to_csv(save_path, mode='a', header=False, index=False)
-    except Exception as e:
+    except RuntimeError as e:
         print("dcgm failed: {}".format(e))
         dcgm.terminate()
 
