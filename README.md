@@ -88,15 +88,9 @@ results are saved at `save_dir`
 
 ## 4. Visualize results
 
-We have visualized some results to look into the benchmark. You can refer to /doc/notebook/plot_results.ipynb to draw pcitures for your own data.
+We have visualized some results to look into the benchmark. You can refer to /doc/notebook/plot_results.ipynb to draw pcitures for your own data. Here are visualization results of profiling with seving a ViT model on NVIDIA A100. 
 
- Here are some example pictures:
 
-![](https://github.com/MLSysOps/MIGProfiler/blob/0cb58f51c557dde9f494acabdd903d5432c946b1/data/A100-80g/infer/cv/vision_transformer_fbusd_bsz_compare.svg)
-
-![](https://github.com/MLSysOps/MIGProfiler/blob/0cb58f51c557dde9f494acabdd903d5432c946b1/data/A100-80g/infer/cv/vision_transformer_gract_bsz_compare.svg)
-
-![](https://github.com/MLSysOps/MIGProfiler/blob/0cb58f51c557dde9f494acabdd903d5432c946b1/data/A100-80g/infer/cv/vision_transformer_latency_bsz_compare.svg)
-
-![](https://github.com/MLSysOps/MIGProfiler/blob/0cb58f51c557dde9f494acabdd903d5432c946b1/data/A100-80g/infer/cv/vision_transformer_throughput_bsz_compare.svg)
-
+|FB Used|Graphics Engine Activity|Avg. Latency (ms)|Throughput (request/s)|
+|:--:|:--:|:--:|:--:|
+|![](https://github.com/MLSysOps/MIGProfiler/blob/0cb58f51c557dde9f494acabdd903d5432c946b1/data/A100-80g/infer/cv/vision_transformer_fbusd_bsz_compare.svg)|![](https://github.com/MLSysOps/MIGProfiler/blob/0cb58f51c557dde9f494acabdd903d5432c946b1/data/A100-80g/infer/cv/vision_transformer_gract_bsz_compare.svg)|![](https://github.com/MLSysOps/MIGProfiler/blob/0cb58f51c557dde9f494acabdd903d5432c946b1/data/A100-80g/infer/cv/vision_transformer_latency_bsz_compare.svg)|![](https://github.com/MLSysOps/MIGProfiler/blob/0cb58f51c557dde9f494acabdd903d5432c946b1/data/A100-80g/infer/cv/vision_transformer_throughput_bsz_compare.svg)|
