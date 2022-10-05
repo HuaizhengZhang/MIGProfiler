@@ -11,7 +11,6 @@ from omegaconf import DictConfig
 from multiprocessing import Process
 from utils.mig_parted import get_mig_devices
 
-
 @hydra.main(version_base=None, config_path='../configs', config_name='single_instance')
 def main(cfg: DictConfig):
     model_name = cfg.model_name
