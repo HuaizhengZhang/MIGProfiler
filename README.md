@@ -90,6 +90,13 @@ results are saved at `save_dir`
 
 We have visualized some results to look into the benchmark. You can refer to /doc/notebook/plot_results.ipynb to draw pcitures for your own data.
 
-Here are some example pictures:
+ Here are some example pictures:
 
-<img src="MLSysOps/MIGProfiler/data/A100-80g\infer\cv\vision_transformer_gract_bsz_compare.svg" alt="vision_transformer_gract_bsz_compare" />![vision_transformer_latency_bsz_compare](MLSysOps/MIGProfiler/data\A100-80g\infer\cv\vision_transformer_latency_bsz_compare.svg)![vision_transformer_throughput_bsz_compare](MLSysOps/MIGProfiler/data\A100-80g\infer\cv\vision_transformer_throughput_bsz_compare.svg)![vision_transformer_fbusd_bsz_compare](MLSysOps/MIGProfiler/data\A100-80g\infer\cv\vision_transformer_fbusd_bsz_compare.svg)
+![](https://github.com/MLSysOps/MIGProfiler/blob/0cb58f51c557dde9f494acabdd903d5432c946b1/data/A100-80g/infer/cv/vision_transformer_fbusd_bsz_compare.svg)
+
+![](https://github.com/MLSysOps/MIGProfiler/blob/0cb58f51c557dde9f494acabdd903d5432c946b1/data/A100-80g/infer/cv/vision_transformer_gract_bsz_compare.svg)
+
+![](https://github.com/MLSysOps/MIGProfiler/blob/0cb58f51c557dde9f494acabdd903d5432c946b1/data/A100-80g/infer/cv/vision_transformer_latency_bsz_compare.svg)
+
+![](https://github.com/MLSysOps/MIGProfiler/blob/0cb58f51c557dde9f494acabdd903d5432c946b1/data/A100-80g/infer/cv/vision_transformer_throughput_bsz_compare.svg)
+
