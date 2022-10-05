@@ -86,22 +86,10 @@ $ python migprofile_single_instance.py
 
 results are saved at `save_dir`
 
-### 4. Hybrid workloads profiling for a certain mig partition(Todo)
+## 4. Visualize results
 
-#### Configuration
+We have visualized some results to look into the benchmark. You can refer to /doc/notebook/plot_results.ipynb to draw pcitures for your own data.
 
-```yaml
-partition: [3,4]
-gpuID: 0
-train_workload: vision_transformer
-infer_workload: resnet50
-```
+Here are some example pictures:
 
-#### Run Benchmark
-
-```shell
-$ python migprofile_hybrid_workloads.py
-```
-
-results are saved at `data/hybrid_workloads_profile/{partition}/`
-
+<img src="MLSysOps/MIGProfiler/data/A100-80g\infer\cv\vision_transformer_gract_bsz_compare.svg" alt="vision_transformer_gract_bsz_compare" />![vision_transformer_latency_bsz_compare](MLSysOps/MIGProfiler/data\A100-80g\infer\cv\vision_transformer_latency_bsz_compare.svg)![vision_transformer_throughput_bsz_compare](MLSysOps/MIGProfiler/data\A100-80g\infer\cv\vision_transformer_throughput_bsz_compare.svg)![vision_transformer_fbusd_bsz_compare](MLSysOps/MIGProfiler/data\A100-80g\infer\cv\vision_transformer_fbusd_bsz_compare.svg)
