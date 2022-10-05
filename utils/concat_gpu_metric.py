@@ -1,5 +1,4 @@
 from typing import Union
-
 import pandas as pd
 import numpy as np
 from pathlib import Path
@@ -29,10 +28,3 @@ def timestamps_align(record_file_path: Union[str, Path], dcgm_file_path: Union[s
     save_file = Path(record_file_path).parent / 'integrated_result.csv'
     res.to_csv(save_file)
 
-
-def main():
-    timestamps_align('/data/A100-80g/train/nlp/nlp_train_bsz.csv',
-                     '/data/A100-80g/train/nlp\dcgm.csv')
-
-if __name__ == '__main__':
-    main()
