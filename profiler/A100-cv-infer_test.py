@@ -2,7 +2,6 @@ import os
 from pathlib import Path
 import numpy as np
 import pandas as pd
-import logging
 import time
 import hydra
 import torch
@@ -61,6 +60,7 @@ def cv_fixed_time_infer(model, fixed_time, dataloader, device):
     total_sample = 0
     power_usage = []
     handle = pynvml.nvmlDeviceGetHandleByIndex(0)
+    pynvml.nvmlGpuInstanceCreateComputeInstance(0, 0)
     for i, (inputs, labels) in tqdm(enumerate(dataloader)):
         inputs = inputs.to(device)
         with torch.set_grad_enabled(False):
