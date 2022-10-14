@@ -4,7 +4,7 @@ batch_sizes=(8 16 32 64 128 256)
 function batch_size_benchmark {
   for batch_size in ${batch_sizes[*]}
   do
-      CUDA_VISIBLE_DEVICES=${1} python ./src/A100-cv-train_test.py \
+      CUDA_VISIBLE_DEVICES=${1} python A100-cv-train_test.py \
       "model_name=${2}" "mig_profile=${3}" "batch_size=${batch_size}" "gpu=${4}"\
       "result_dir=${5}"
   done
