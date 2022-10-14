@@ -1,44 +1,34 @@
 import os
+import re
 import subprocess
 import time
-from multiprocessing import Process
 from pathlib import Path
+import requests
 import pandas as pd
-from functools import wraps
 
 
-def dcgm_monitor(save_dir, instance_id, logger):
-    def dcgm_decorater(f):
-        @wraps(f)
-        def decorated(*args, **kwargs):
-            # start dcgm
-            start_dcgm()
-            dcgm_proc = Process(target=dcgm, args=(save_dir, instance_id, logger))
-            dcgm_proc.daemon = True
-            dcgm_proc.start()
-            logger.info(f"dcgm process {dcgm_proc.pid} is monitoring")
-            time.sleep(2)
-            f(*args, **kwargs)
-            logger.info(f"dcgm process {dcgm_proc.pid} is stopped")
-            dcgm_proc.terminate()
+def dcgm_exporter(gpu_i_id, save_dir=None):
+    url = "http://127.0.0.1:9400/metrics"
+    metric = requests.get(url).text
+    timestamp = int(time.time())
+    for line in metric.splitlines():
+        if line[0]!='#':
+            gid = re.search(r"GPU_I_ID=\"(.)\"", line).group(1)
+            if gid == str(gpu_i_id):
+                profile = re.search(r"GPU_I_PROFILE=\"([0-9]g.[0-9]*gb)", line).group(1)
+                if line.split('{')[0] == "DCGM_FI_DEV_FB_USED":
+                    fbusd = line.split(' ')[-1]
+                if line.split('{')[0] == "DCGM_FI_PROF_GR_ENGINE_ACTIVE":
+                    gract = line.split(' ')[-1]
+    save_file_path = Path(save_dir) / f'dcgm.csv'
+    if not Path(save_dir).exists():
+        os.makedirs(save_dir)
+    if not save_file_path.exists():
+        with open(save_file_path, mode='w') as save_file:
+            save_file.write("EntityId,Profile,GRACT,FBUSD,TimeStamp\n")
 
-        return decorated
-
-    return dcgm_decorater
-
-
-def start_dcgm():
-    cmd = 'systemctl start dcgm'
-    # start dcgm
-    p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-    return p.communicate()[0].decode('utf-8')
-
-
-def stop_dcgm():
-    cmd = 'systemctl stop dcgm'
-    # start dcgm
-    p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-    return p.communicate()[0].decode('utf-8')
+    with open(save_file_path, mode='a') as save_file:
+        save_file.write(f"{gid},{profile},{gract},{fbusd},{timestamp}\n")
 
 
 def dcgm(save_dir, instance_id, logger):
@@ -66,3 +56,6 @@ def dcgm(save_dir, instance_id, logger):
                 df.to_csv(save_path, mode='a', header=True, index=False)
             else:
                 df.to_csv(save_path, mode='a', header=False, index=False)
+
+if __name__ == "__main__":
+    dcgm_exporter(gpu_i_id=1, save_dir="E:\MIGProfiler\profiler\monitor")
