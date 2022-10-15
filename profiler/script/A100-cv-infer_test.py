@@ -10,7 +10,7 @@ from tqdm import tqdm
 import pynvml
 
 from utils.common import p99_latency
-from utils.data_hub import load_places365_data
+from utils.data_hub import load_imagenet_data
 from utils.model_hub import load_cv_model
 pynvml.nvmlInit()
 
@@ -21,10 +21,9 @@ def main(cfg: DictConfig):
         os.makedirs(cfg.result_dir)
     # create model
     model, input_size = load_cv_model(model_name=cfg.model_name)
-    dataloader = load_places365_data(
+    dataloader = load_imagenet_data(
             input_size=input_size,
             batch_size=cfg.batch_size,
-            data_path=cfg.data_path,
             num_workers=cfg.workers
         )
     tail_latency, latency_std, throughput, power_mean, start_timestamp, end_timestamp = cv_fixed_time_infer(

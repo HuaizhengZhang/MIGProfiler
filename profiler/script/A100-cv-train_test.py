@@ -10,7 +10,7 @@ import torch
 from omegaconf import DictConfig
 from torch import nn
 from tqdm import tqdm
-from utils.data_hub import load_places365_data
+from utils.data_hub import load_imagenet_data
 from utils.model_hub import load_cv_model
 # gpu metric reference: https://docs.nvidia.com/datacenter/dcgm/latest/dcgm-user-guide/feature-overview.html
 pynvml.nvmlInit()
@@ -22,10 +22,9 @@ def main(cfg: DictConfig):
         os.makedirs(cfg.result_dir)
     # create model
     model, input_size = load_cv_model(model_name=cfg.model_name)
-    dataloader = load_places365_data(
+    dataloader = load_imagenet_data(
             input_size=input_size,
             batch_size=cfg.batch_size,
-            data_path=cfg.data_path,
             num_workers=cfg.workers
         )
     criterion = nn.CrossEntropyLoss().cuda(cfg.gpu)
