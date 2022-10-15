@@ -6,7 +6,7 @@ from transformers import AutoTokenizer
 from utils.common import model_names
 
 
-def load_imagenet_data(input_size, batch_size, num_workers) -> DataLoader:
+def load_imagenet_data(input_size, batch_size, num_workers=4) -> DataLoader:
     """download and wrap imagenet training set as Dataloader
 
     Args:
@@ -39,7 +39,7 @@ def _collate_fn(x, tokenizer, seq_length):
     return ret
 
 
-def load_amazaon_review_data(model_name, seq_length, batch_size, num_workers):
+def load_amazaon_review_data(model_name, seq_length, batch_size, num_workers=4):
     model_name = model_names[model_name]
     # prepare test data
     tokenizer = AutoTokenizer.from_pretrained(model_name)

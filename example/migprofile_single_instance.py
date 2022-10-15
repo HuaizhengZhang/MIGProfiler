@@ -1,17 +1,19 @@
 import logging
 import os
 import sys
-from controller.utils import get_mig_devices, enable_mig_mode, reset_mig, create_mig_profile
-import hydra
-from omegaconf import DictConfig
+import docker
+
+from mig_perf.controller.utils import enable_mig_mode, reset_mig, create_mig_profile
+
+profiler = docker.APIClient(base_url='tcp://127.0.0.1:9709')
+dcgm = docker.APIClient(base_url='tcp://127.0.0.1:9400')
 
 sys.path.append(os.getcwd())
 
 
-@hydra.main(version_base=None, config_path='../configs', config_name='controller')
-def main(cfg: DictConfig):
-    gpu_id = cfg.gpu_id
-    mig_profiles = cfg.mig_profiles
+def main():
+    gpu_id = 0
+    mig_profiles = ['1g.10gb', '2g.20gb', '3g.40gb', '4g.40gb', '7g.80gb']
     logger = logging.getLogger(f"single_instance_benchmark")
 
     # enable gpu mig mode
@@ -26,26 +28,19 @@ def main(cfg: DictConfig):
             logger.info(dgi_out)
             cgi_out = create_mig_profile(gpu_id, mig_profile)
             logger.info(cgi_out)
-            # get mig device uuid
-            target_mig_device = get_mig_devices(gpu_id)[0]
-            checking_mig_profile, uuid, instance_id = target_mig_device['mig_name'], \
-                                                      target_mig_device['uuid'], \
-                                                      target_mig_device['instance_id']
-            assert checking_mig_profile == mig_profile, f"target mig device does not match, " \
-                                                        f"one is {checking_mig_profile}, the other is {mig_profile}"
             # @yizheng here the benchmark need run in docker
             # run benchmark
             """
             here we should communicate with container and run python profiler.py in docker
             """
-            profile()
+            result = profile()
 
     except Exception as e:
         logger.exception(e, f'benchmark failed')
 
 
 def profile():
-    pass
+    return None
 
 
 if __name__ == '__main__':

@@ -37,28 +37,4 @@ def enable_mig_mode(gpu_id):
     return p.communicate()[0].decode("utf-8")
 
 
-def get_mig_devices(gpu_id):
-    cmd = f"nvidia-smi -L"
-    mig_devices = []
-    p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    output, unused_err = p.communicate(timeout=10)
-    output = output.decode("utf-8")
-    find_gpu = False
-    for line in output.splitlines():
-        if line.strip().split(':')[0].split(' ')[0] == 'GPU':
-            if line.strip().split(':')[0].split(' ')[1] == str(gpu_id):
-                find_gpu = True
-            else:
-                find_gpu = False
-                continue
-        if find_gpu and line.strip().split(' ')[0] == 'MIG':
-            mig_devices.append(
-                {
-                    'mig_name': line.strip().split(' ')[1],
-                    'uuid': line.strip().split(':')[-1].strip().split(')')[0],
-                    'instance_id': line.strip().split(':')[0].split(' ')[-1]
-                }
-            )
-    return mig_devices
-
 

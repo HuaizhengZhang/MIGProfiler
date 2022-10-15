@@ -1,0 +1,11 @@
+model_name: vision_transformer
+workload: cv_infer
+benchmark_plan:
+  fixed_time: 60
+  default_batchsize: 32
+  default_seqlenth: 64
+  batch_sizes: [1, 2, 4, 8, 16, 32]
+  sequence_lengths: [32, 64, 128, 256, 512]
+hydra:
+  run:
+    dir: /root/MIGProfiler/logs/${now:%Y-%m-%d}/${now:%H-%M-%S}
