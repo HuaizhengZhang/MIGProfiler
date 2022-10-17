@@ -1,0 +1,15 @@
+version: "3.9"
+services:
+  profiler:
+    build:
+      context: ..
+      dockerfile: ./ubuntu.Dockerfile
+  # DCGM_EXPORTER_VERSION=2.4.7-2.6.11 && docker run -d --rm
+  #--gpus all    --net host    --cap-add SYS_ADMIN
+  #nvcr.io/nvidia/k8s/dcgm-exporter:${DCGM_EXPORTER_VERSION}-ubuntu20.04
+  #-c 1000 -f /etc/dcgm-exporter/dcp-metrics-included.csv -d i
+  dcgm:
+    image:  nvcr.io/nvidia/k8s/dcgm-exporter:2.4.7-2.6.11-ubuntu20.04
+    build:
+      context: ..
+
