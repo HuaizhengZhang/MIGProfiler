@@ -1,8 +1,8 @@
 from torch import nn
 import torchvision.models as models
-from transformers import AutoModel, AutoModelForSequenceClassification
+from transformers import AutoModelForSequenceClassification
 
-from utils.common import model_names
+from mig_perf.utils.common import model_names
 
 
 def set_parameter_requires_grad(model, feature_extracting):

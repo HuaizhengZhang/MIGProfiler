@@ -6,11 +6,11 @@ import requests
 import torch
 from torch import nn
 from tqdm import tqdm
-from utils.data_hub import load_amazaon_review_data
-from utils.model_hub import load_nlp_model
-from utils.common import p99_latency
-from utils.data_hub import load_imagenet_data
-from utils.model_hub import load_cv_model
+from mig_perf.utils.data_hub import load_amazaon_review_data
+from mig_perf.utils.model_hub import load_nlp_model
+from mig_perf.utils.common import p99_latency
+from mig_perf.utils.data_hub import load_places365_data
+from mig_perf.utils.model_hub import load_cv_model
 # gpu metric reference: https://docs.nvidia.com/datacenter/dcgm/latest/dcgm-user-guide/feature-overview.html
 
 DCGM_URL = "http://127.0.0.1:9400/metrics"
@@ -21,11 +21,13 @@ def cv_infer(
         model_name,
         fixed_time,
         batch_size,
+        data_path,
 ):
     # create model
     model, input_size = load_cv_model(model_name=model_name)
-    dataloader = load_imagenet_data(
+    dataloader = load_places365_data(
             input_size=input_size,
+            data_path=data_path,
             batch_size=batch_size,
         )
     tail_latency, latency_std, throughput, gract, fbusd, power, profile = _cv_fixed_time_infer(
@@ -83,6 +85,7 @@ def cv_train(
         model_name,
         fixed_time,
         batch_size,
+        data_path,
         lr=1e-5,
         momentum=0.9,
         weight_decay=1e-4
@@ -90,9 +93,10 @@ def cv_train(
     # TODO: optimizer should be customized
     # create model
     model, input_size = load_cv_model(model_name=model_name)
-    dataloader = load_imagenet_data(
+    dataloader = load_places365_data(
             input_size=input_size,
             batch_size=batch_size,
+            data_path=data_path,
         )
     criterion = nn.CrossEntropyLoss().cuda(0)
     optimizer = torch.optim.SGD(model.parameters(), lr,
