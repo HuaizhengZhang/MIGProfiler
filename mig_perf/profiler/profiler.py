@@ -7,9 +7,14 @@ from omegaconf import DictConfig
 
 from benchmark import cv_train, nlp_infer, nlp_train, cv_infer
 PLACES365_DATA_DIR = "places365/"
+RESULT_DATA_DIR = "data"
 
 """
-docker run docker-profiler:latest -v "PATH/TO/MY/CACHE/DIR":
+ docker run -v /root/places365_standard/:/workspace/places365/ \
+ -v /root/MIGProfiler/data/:/workspace/data/\
+ -v /root/MIGProfiler/logs/: /workspace/logs/\
+ --net mig_perf --gpus 'device=0:0' --name profiler-container \
+ --cap-add SYS_ADMIN --shm-size="15g" mig-perf/profiler:1.0
 """
 
 
@@ -29,7 +34,9 @@ def run(cfgs: DictConfig):
         result = []
         for batch_size in batch_sizes:
             try:
-                result.append(cv_infer(model_name, fixed_time, batch_size, PLACES365_DATA_DIR))
+                cv_infer_res = cv_infer(model_name, fixed_time, batch_size, PLACES365_DATA_DIR)
+                print(f"result:{cv_infer_res}")
+                result.append(cv_infer_res)
             except Exception as e:
                 logger.exception(e)
         ret = pd.concat(result)
@@ -74,12 +81,13 @@ def run(cfgs: DictConfig):
         ret_bsz = pd.concat(result_bsz)
         ret = pd.concat([ret_seq, ret_bsz])
     # mount local volumn ./workspace
-    save_file = Path(f'./workspace/{model_name}_{workload}.csv')
+    save_file = Path(f'{RESULT_DATA_DIR}/{model_name}_{workload}.csv')
     if save_file.exists():
-        ret.to_csv(f'./workspace/{model_name}_{workload}.csv', mode='a', header=False)
+        ret.to_csv(f'{RESULT_DATA_DIR}/{model_name}_{workload}.csv', mode='a', header=False)
     else:
-        ret.to_csv(f'./workspace/{model_name}_{workload}.csv', mode='a', header=True)
+        ret.to_csv(f'{RESULT_DATA_DIR}/{model_name}_{workload}.csv', mode='a', header=True)
     logger.info(f"result: {ret}")
+    print(f"final result: {ret}")
 
 
 if __name__ == '__main__':

@@ -13,7 +13,7 @@ from mig_perf.utils.data_hub import load_places365_data
 from mig_perf.utils.model_hub import load_cv_model
 # gpu metric reference: https://docs.nvidia.com/datacenter/dcgm/latest/dcgm-user-guide/feature-overview.html
 
-DCGM_URL = "dcgm_exporter/metrics"
+DCGM_URL = "http://dcgm_exporter:9400/metrics"
 GPU_I_ID = 1
 
 
