@@ -1,8 +1,7 @@
 FROM nvcr.io/nvidia/cuda:11.6.0-base-ubuntu20.04
-COPY ../ ./workspace
-VOLUME ["data"]
-WORKDIR ./workspace
-RUN pip install -r ../requirements.txt
-
+FROM pytorch/pytorch
+COPY ./ ./
+WORKDIR ./
+RUN pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
+ENV PYTHONPATH ./
 CMD python mig_perf/profiler/profiler.py
-
