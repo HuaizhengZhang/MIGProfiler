@@ -30,7 +30,7 @@ def cv_infer(
             data_path=data_path,
             batch_size=batch_size,
         )
-    tail_latency, latency_std, throughput, gract, fbusd, power, profile = _cv_fixed_time_infer(
+    tail_latency, latency_std, throughput, gract, gract_std, fbusd, power, profile = _cv_fixed_time_infer(
         model=model, fixed_time=fixed_time,
         dataloader=dataloader, device=f'cuda:0',
         gpu_i_id=GPU_I_ID, dcgm_url=DCGM_URL
@@ -42,6 +42,7 @@ def cv_infer(
         'latency_std': [latency_std],
         'throughput': [throughput],
         'gract': [float(gract)],
+        'gract_std': [gract_std],
         'fbusd': [float(fbusd)],
         'power': [float(power)],
         'mig_profile': [profile]
@@ -53,6 +54,9 @@ def _cv_fixed_time_infer(model, gpu_i_id, dcgm_url, fixed_time, dataloader, devi
     model = model.to(device)
     model.eval()
     latency = []
+    gract_list = []
+    fbusd_list = []
+    power_list = []
     total_sample = 0
     for i, (inputs, labels) in tqdm(enumerate(dataloader)):
         inputs = inputs.to(device)
@@ -68,17 +72,24 @@ def _cv_fixed_time_infer(model, gpu_i_id, dcgm_url, fixed_time, dataloader, devi
                 latency += [starter.elapsed_time(ender)]
                 end_timestamp = int(time.time())
                 total_sample += len(inputs)
-            if i == 60:
-                    gract, fbusd, power, profile = dcgm_exporter(gpu_i_id, dcgm_url)
+            if i % 10 == 0:
+                gract, fbusd, power, profile = dcgm_exporter(gpu_i_id, dcgm_url)
+                gract_list.append(float(gract))
+                fbusd_list.append(float(fbusd))
+                power_list.append(float(power))
         if i > 100 and end_timestamp - start_timestamp > fixed_time:
             break
     throughput = float(1000 * total_sample) / np.sum(latency)
     tail_latency = p99_latency(latency)
     latency_std = np.std(latency)
+    gract_mean = np.mean(gract_list)
+    gract_std = np.std(gract_list)
+    fbusd_mean = np.mean(fbusd_list)
+    power_mean = np.mean(power_list)
     # gpu clear
     torch.cuda.empty_cache()
 
-    return tail_latency, latency_std, throughput, gract, fbusd, power, profile
+    return tail_latency, latency_std, throughput, gract_mean, gract_std, fbusd_mean, power_mean, profile
 
 
 def cv_train(
@@ -102,7 +113,7 @@ def cv_train(
     optimizer = torch.optim.SGD(model.parameters(), lr,
                                 momentum=momentum,
                                 weight_decay=weight_decay)
-    tail_latency, latency_std, throughput, gract, fbusd, power, profile = _cv_fixed_time_train(
+    tail_latency, latency_std, throughput, gract, gract_std, fbusd, power, profile = _cv_fixed_time_train(
         criterion=criterion, optimizer=optimizer,
         model=model, fixed_time=fixed_time,
         dataloader=dataloader, device=f'cuda:0',
@@ -115,6 +126,7 @@ def cv_train(
         'latency_std': [latency_std],
         'throughput': [throughput],
         'gract': [float(gract)],
+        'gract_std': [gract_std],
         'fbusd': [float(fbusd)],
         'power': [float(power)],
         'mig_profile': [profile]
@@ -126,6 +138,9 @@ def _cv_fixed_time_train(model, fixed_time, dataloader, criterion, optimizer, de
     model = model.to(device)
     model.eval()
     latency = []
+    gract_list = []
+    fbusd_list = []
+    power_list = []
     total_sample = 0
     for i, (inputs, labels) in tqdm(enumerate(dataloader)):
         inputs = inputs.to(device)
@@ -147,17 +162,24 @@ def _cv_fixed_time_train(model, fixed_time, dataloader, criterion, optimizer, de
                 latency += [starter.elapsed_time(ender)]
                 end_timestamp = int(time.time())
                 total_sample += len(inputs)
-            if i == 60:
+            if i % 10 == 0:
                 gract, fbusd, power, profile = dcgm_exporter(gpu_i_id, dcgm_url)
+                gract_list.append(float(gract))
+                fbusd_list.append(float(fbusd))
+                power_list.append(float(power))
         if i > 100 and end_timestamp - start_timestamp > fixed_time:
             break
     throughput = float(1000 * total_sample) / np.sum(latency)
     latency_mean = np.mean(latency)
     latency_std = np.std(latency)
+    gract_mean = np.mean(gract_list)
+    gract_std = np.std(gract_list)
+    fbusd_mean = np.mean(fbusd_list)
+    power_mean = np.mean(power_list)
     # gpu clear
     torch.cuda.empty_cache()
 
-    return latency_mean, latency_std, throughput, gract, fbusd, power, profile
+    return latency_mean, latency_std, throughput, gract_mean, gract_std, fbusd_mean, power_mean, profile
 
 
 def nlp_infer(
@@ -173,7 +195,7 @@ def nlp_infer(
         seq_length=seq_length,
         batch_size=batch_size,
     )
-    latency_mean, latency_std, throughput, gract, fbusd, power, profile = _nlp_fixed_time_infer(
+    latency_mean, latency_std, throughput, gract, gract_std, fbusd, power, profile = _nlp_fixed_time_infer(
         model=model, fixed_time=fixed_time,
         dataloader=dataloader, device=f'cuda:0',
         gpu_i_id=GPU_I_ID,
@@ -187,6 +209,7 @@ def nlp_infer(
         'latency_std': [latency_std],
         'throughput': [throughput],
         'gract': [float(gract)],
+        'gract_std': [gract_std],
         'fbusd': [float(fbusd)],
         'power': [float(power)],
         'mig_profile': [profile]
@@ -198,6 +221,9 @@ def _nlp_fixed_time_infer(model, fixed_time, dataloader, device, gpu_i_id, dcgm_
     model = model.to(device)
     model.eval()
     latency = []
+    gract_list = []
+    fbusd_list = []
+    power_list = []
     total_sample = 0
     for i, inputs in tqdm(enumerate(dataloader)):
         inputs = inputs.to(device)
@@ -213,17 +239,24 @@ def _nlp_fixed_time_infer(model, fixed_time, dataloader, device, gpu_i_id, dcgm_
                 latency += [starter.elapsed_time(ender)]
                 end_timestamp = int(time.time())
                 total_sample += len(inputs)
-            if i == 60:
+            if i % 10 == 0:
                 gract, fbusd, power, profile = dcgm_exporter(gpu_i_id, dcgm_url)
+                gract_list.append(float(gract))
+                fbusd_list.append(float(fbusd))
+                power_list.append(float(power))
         if i > 100 and end_timestamp - start_timestamp > fixed_time:
             break
     throughput = float(1000 * total_sample) / np.sum(latency)
     latency_mean = np.mean(latency)
     latency_std = np.std(latency)
+    gract_mean = np.mean(gract_list)
+    gract_std = np.std(gract_list)
+    fbusd_mean = np.mean(fbusd_list)
+    power_mean = np.mean(power_list)
     # gpu clear
     torch.cuda.empty_cache()
 
-    return latency_mean, latency_std, throughput, gract, fbusd, power, profile
+    return latency_mean, latency_std, throughput, gract_mean, gract_std, fbusd_mean, power_mean, profile
 
 
 def nlp_train(
@@ -244,7 +277,7 @@ def nlp_train(
     )
     criterion = nn.CrossEntropyLoss().cuda(0)
     optimizer = torch.optim.AdamW(model.parameters(), lr, weight_decay=weight_decay)
-    latency_mean, latency_std, throughput, gract, fbusd, power, profile = _nlp_fixed_time_train(
+    latency_mean, latency_std, throughput, gract, gract_std, fbusd, power, profile = _nlp_fixed_time_train(
         model=model, fixed_time=fixed_time,
         dataloader=dataloader, device=f'cuda:0',
         criterion=criterion, optimizer=optimizer,
@@ -258,6 +291,7 @@ def nlp_train(
         'latency_std': [latency_std],
         'throughput': [throughput],
         'gract': [float(gract)],
+        'gract_std': gract_std,
         'fbusd': [float(fbusd)],
         'power': [float(power)],
         'mig_profile': [profile]
@@ -269,6 +303,9 @@ def _nlp_fixed_time_train(model, fixed_time, dataloader, criterion, optimizer, d
     model = model.to(device)
     model.eval()
     latency = []
+    gract_list = []
+    fbusd_list = []
+    power_list = []
     total_sample = 0
     for i, inputs in tqdm(enumerate(dataloader)):
         inputs = inputs.to(device)
@@ -290,17 +327,24 @@ def _nlp_fixed_time_train(model, fixed_time, dataloader, criterion, optimizer, d
                 latency += [starter.elapsed_time(ender)]
                 end_timestamp = int(time.time())
                 total_sample += len(inputs)
-            if i == 60:
+            if i % 10 == 0:
                 gract, fbusd, power, profile = dcgm_exporter(gpu_i_id, dcgm_url)
+                gract_list.append(float(gract))
+                fbusd_list.append(float(fbusd))
+                power_list.append(float(power))
         if i > 100 and end_timestamp - start_timestamp > fixed_time:
             break
     throughput = float(1000 * total_sample) / np.sum(latency)
     latency_mean = np.mean(latency)
     latency_std = np.std(latency)
+    gract_mean = np.mean(gract_list)
+    gract_std = np.std(gract_list)
+    fbusd_mean = np.mean(fbusd_list)
+    power_mean = np.mean(power_list)
     # gpu clear
     torch.cuda.empty_cache()
 
-    return latency_mean, latency_std, throughput, gract, fbusd, power, profile
+    return latency_mean, latency_std, throughput, gract_mean, gract_std, fbusd_mean, power_mean, profile
 
 
 def dcgm_exporter(gpu_i_id, url):
@@ -319,8 +363,5 @@ def dcgm_exporter(gpu_i_id, url):
                 if line.split('{')[0] == "DCGM_FI_DEV_POWER_USAGE":
                     power = line.split(' ')[-1]
     return gract, fbusd, power, profile
-
-
-
 
 
