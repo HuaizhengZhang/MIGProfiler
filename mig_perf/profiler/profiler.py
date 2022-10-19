@@ -6,13 +6,14 @@ import pandas as pd
 from omegaconf import DictConfig
 
 from benchmark import cv_train, nlp_infer, nlp_train, cv_infer
+pd.set_option('display.max_columns', None)
 PLACES365_DATA_DIR = "places365/"
 RESULT_DATA_DIR = "data"
 
 """
- docker run -v /root/places365_standard/:/workspace/places365/ \
+ docker run -d -rm -v /root/places365_standard/:/workspace/places365/ \
  -v /root/MIGProfiler/data/:/workspace/data/\
- -v /root/MIGProfiler/logs/: /workspace/logs/\
+ -v /root/MIGProfiler/logs/:/workspace/logs/\
  --net mig_perf --gpus 'device=0:0' --name profiler-container \
  --cap-add SYS_ADMIN --shm-size="15g" mig-perf/profiler:1.0
 """
@@ -35,7 +36,7 @@ def run(cfgs: DictConfig):
         for batch_size in batch_sizes:
             try:
                 cv_infer_res = cv_infer(model_name, fixed_time, batch_size, PLACES365_DATA_DIR)
-                print(f"result:{cv_infer_res}")
+                logger.info(f"batch size={batch_size} inference finished, result:\n{cv_infer_res}")
                 result.append(cv_infer_res)
             except Exception as e:
                 logger.exception(e)
@@ -44,7 +45,9 @@ def run(cfgs: DictConfig):
         result = []
         for batch_size in batch_sizes:
             try:
-                result.append(cv_train(model_name, fixed_time, batch_size, PLACES365_DATA_DIR))
+                cv_train_res = cv_train(model_name, fixed_time, batch_size, PLACES365_DATA_DIR)
+                result.append(cv_train_res)
+                logger.info(f"batch size={batch_size} training finished, result:\n{cv_train_res}")
             except Exception as e:
                 logger.exception(e)
         ret = pd.concat(result)
