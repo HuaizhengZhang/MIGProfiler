@@ -1,33 +1,32 @@
 """
 refernce: https://github.com/nvidia/mig-parted
 """
+import logging
 import subprocess
 
 
-class MIGController:
-    """
-    In charge of mig partition and recovery
-    """
-    def __init__(self):
-        pass
+def profile_plan(gpu_id, mig_profiles):
 
-    def partition(self):
-        """
-        takes in an assigned partition(gpiID with mig partition),
-        if success, returns a data structure contains the deviceIds of all created mig device.
-        Return example:
-            mig-devices:
-                1g.5gb: 'MIG-29f07255-51c0-5691-82c4-cbc57760ff63'
-                2g.10gb: 'MIG-ad654d5e-db91-50e1-bcf4-1e9c24f825ad'
-                3g.20gb: 'MIG-ea08ed7b-a485-5967-9c78-2fa6e548c43a'
-        """
-        pass
-
-    def recover(self):
-        """
-        stop all cuda processes on img devices and then delete all mig devices.
-        """
-        pass
+    def decorator(f):
+        def inner(*args, **kwargs):
+            # enable gpu mig mode
+            enable_mig_out = enable_mig_mode(gpu_id)
+            print(enable_mig_out)
+            # benchmark on different mig profile instance
+            try:
+                for mig_profile in mig_profiles:
+                    dci_out, dgi_out = reset_mig(gpu_id)
+                    print(dci_out)
+                    print(dgi_out)
+                    cgi_out = create_mig_profile(gpu_id, mig_profile)
+                    print(cgi_out)
+                    # run benchmark
+                    f(*args, **kwargs)
+                    print(f"benchmark on {mig_profile} done")
+            except Exception as e:
+                print(e, f'benchmark failed')
+        return inner
+    return decorator
 
 
 def reset_mig(gpu_id):

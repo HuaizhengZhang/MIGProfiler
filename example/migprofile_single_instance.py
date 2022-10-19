@@ -1,47 +1,33 @@
-import logging
-import os
-import sys
-import docker
-
-from mig_perf.controller.controller import enable_mig_mode, reset_mig, create_mig_profile
-
-profiler = docker.APIClient(base_url='tcp://127.0.0.1:9709')
-dcgm = docker.APIClient(base_url='tcp://127.0.0.1:9400')
-
-sys.path.append(os.getcwd())
+from mig_perf.controller.controller import profile_plan
+import subprocess
 
 
-def main():
-    gpu_id = 0
-    mig_profiles = ['1g.10gb', '2g.20gb', '3g.40gb', '4g.40gb', '7g.80gb']
-    logger = logging.getLogger(f"single_instance_benchmark")
-
-    # enable gpu mig mode
-    enable_mig_out = enable_mig_mode(gpu_id)
-    logger.info(enable_mig_out)
-
-    # benchmark on different mig profile instance
-    try:
-        for mig_profile in mig_profiles:
-            dci_out, dgi_out = reset_mig(gpu_id)
-            logger.info(dci_out)
-            logger.info(dgi_out)
-            cgi_out = create_mig_profile(gpu_id, mig_profile)
-            logger.info(cgi_out)
-            # @yizheng here the benchmark need run in docker
-            # run benchmark
-            """
-            here we should communicate with container and run python profiler.py in docker
-            """
-            result = profile()
-
-    except Exception as e:
-        logger.exception(e, f'benchmark failed')
-
-
-def profile():
-    return None
+@profile_plan(gpu_id=0, mig_profiles=['1g.10gb', '2g.20gb', '3g.40gb', '4g.40gb', '7g.80gb'])
+def single_instance_benchmark(
+        model_name: str,
+        workload: str,
+        device_str: str,
+        cv_task_dataset_path: str,
+        result_save_path: str,
+        logs_save_path: str):
+    cmd = f"docker run --rm --gpus '{str(device_str)}' --net mig_perf \
+    --name profiler --cap-add SYS_ADMIN --shm-size=\"15g\" \
+    -v {str(cv_task_dataset_path)}:/workspace/places365/  \
+    -v {str(result_save_path)}:/workspace/data/ \
+    -v {str(logs_save_path)}:/workspace/logs/  \
+    mig-perf/profiler:1.0 \"model_name={str(model_name)}\" \"workload={str(workload)}\""
+    p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    while not p.poll():
+        line = p.stdout.readline().split()
+        print(line)
 
 
 if __name__ == '__main__':
-    main()
+    single_instance_benchmark(
+        model_name="vision_transformer",
+        workload="cv_infer",
+        device_str="device=0:0",
+        cv_task_dataset_path="/root/places365_standard/",
+        result_save_path="/root/MIGProfiler/data/",
+        logs_save_path="/root/MIGProfiler/logs/"
+    )
