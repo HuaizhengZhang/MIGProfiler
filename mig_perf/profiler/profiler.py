@@ -55,14 +55,19 @@ def run(cfgs: DictConfig):
         result_seq = []
         for seq_length in seq_lengths:
             try:
-                result_seq.append(nlp_infer(model_name, fixed_time, batch_size=default_batchsize, seq_length=seq_length))
+                nlp_infer_seq_res = nlp_infer(model_name, fixed_time, batch_size=default_batchsize, seq_length=seq_length)
+                logger.info(f"batch size={default_batchsize} sequence length={seq_length} inference finished, result:\n{nlp_infer_seq_res}")
+                result_seq.append(nlp_infer_seq_res)
             except Exception as e:
                 logger.exception(e)
         ret_seq = pd.concat(result_seq)
         result_bsz = []
         for batch_size in batch_sizes:
             try:
-                result_bsz.append(nlp_infer(model_name, fixed_time, batch_size=batch_size, seq_length=default_seqlenth))
+                nlp_infer_bsz_res = nlp_infer(model_name, fixed_time, batch_size=batch_size, seq_length=default_seqlenth)
+                logger.info(
+                    f"batch size={batch_size} sequence length={default_seqlenth} inference finished, result:\n{nlp_infer_bsz_res}")
+                result_seq.append(nlp_infer_bsz_res)
             except Exception as e:
                 logger.exception(e)
         ret_bsz = pd.concat(result_bsz)
@@ -71,14 +76,22 @@ def run(cfgs: DictConfig):
         result_seq = []
         for seq_length in seq_lengths:
             try:
-                result_seq.append(nlp_train(model_name, fixed_time, batch_size=default_batchsize, seq_length=seq_length))
+                nlp_train_seq_res = nlp_train(model_name, fixed_time, batch_size=default_batchsize,
+                                              seq_length=seq_length)
+                logger.info(
+                    f"batch size={default_batchsize} sequence length={seq_length} training finished, result:\n{nlp_train_seq_res}")
+                result_seq.append(nlp_train_seq_res)
             except Exception as e:
                 logger.exception(e)
         ret_seq = pd.concat(result_seq)
         result_bsz = []
         for batch_size in batch_sizes:
             try:
-                result_bsz.append(nlp_train(model_name, fixed_time, batch_size=batch_size, seq_length=default_seqlenth))
+                nlp_train_bsz_res = nlp_train(model_name, fixed_time, batch_size=batch_size,
+                                              seq_length=default_seqlenth)
+                logger.info(
+                    f"batch size={batch_size} sequence length={default_seqlenth} training finished, result:\n{nlp_train_bsz_res}")
+                result_seq.append(nlp_train_bsz_res)
             except Exception as e:
                 logger.exception(e)
         ret_bsz = pd.concat(result_bsz)
@@ -89,8 +102,7 @@ def run(cfgs: DictConfig):
         ret.to_csv(f'{RESULT_DATA_DIR}/{model_name}_{workload}.csv', mode='a', header=False)
     else:
         ret.to_csv(f'{RESULT_DATA_DIR}/{model_name}_{workload}.csv', mode='a', header=True)
-    logger.info(f"result: {ret}")
-    print(f"final result: {ret}")
+    logger.info(f"final result: \n {ret}")
 
 
 if __name__ == '__main__':
