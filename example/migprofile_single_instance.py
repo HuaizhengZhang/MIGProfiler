@@ -3,7 +3,7 @@ import os
 import sys
 import docker
 
-from mig_perf.controller.utils import enable_mig_mode, reset_mig, create_mig_profile
+from mig_perf.controller.controller import enable_mig_mode, reset_mig, create_mig_profile
 
 profiler = docker.APIClient(base_url='tcp://127.0.0.1:9709')
 dcgm = docker.APIClient(base_url='tcp://127.0.0.1:9400')
