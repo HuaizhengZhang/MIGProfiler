@@ -17,9 +17,8 @@ def single_instance_benchmark(
     -v {str(logs_save_path)}:/workspace/logs/  \
     mig-perf/profiler:1.0 \"model_name={str(model_name)}\" \"workload={str(workload)}\""
     p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    while not p.poll():
-        line = p.stdout.readline().split()
-        print(line)
+    print(p.communicate()[0].decode("utf-8"))
+    p.terminate()
 
 
 if __name__ == '__main__':

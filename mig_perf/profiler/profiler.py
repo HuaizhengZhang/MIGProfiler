@@ -5,7 +5,7 @@ import hydra
 import pandas as pd
 from omegaconf import DictConfig
 
-from benchmark import cv_train, nlp_infer, nlp_train, cv_infer
+from workload import cv_train, nlp_infer, nlp_train, cv_infer
 pd.set_option('display.max_columns', None)
 PLACES365_DATA_DIR = "places365/"
 RESULT_DATA_DIR = "data"
@@ -20,6 +20,8 @@ docker run --rm --gpus 'device=0:0' --net mig_perf \
 -v /root/places365_standard/:/workspace/places365/  \
 -v /root/MIGProfiler/data/:/workspace/data/ \
 -v /root/MIGProfiler/logs/:/workspace/logs/  \
+-v /root/.cache/torch/:/workspace/torch_models/ \
+-v /root/.cache/huggingface/:/workspace/huggingface/ \
 mig-perf/profiler:1.0 "model_name=vision_transformer" "workload=cv_infer"
 """
 
@@ -72,7 +74,7 @@ def run(cfgs: DictConfig):
                 nlp_infer_bsz_res = nlp_infer(model_name, fixed_time, batch_size=batch_size, seq_length=default_seqlenth)
                 logger.info(
                     f"batch size={batch_size} sequence length={default_seqlenth} inference finished, result:\n{nlp_infer_bsz_res}")
-                result_seq.append(nlp_infer_bsz_res)
+                result_bsz.append(nlp_infer_bsz_res)
             except Exception as e:
                 logger.exception(e)
         ret_bsz = pd.concat(result_bsz)
@@ -96,7 +98,7 @@ def run(cfgs: DictConfig):
                                               seq_length=default_seqlenth)
                 logger.info(
                     f"batch size={batch_size} sequence length={default_seqlenth} training finished, result:\n{nlp_train_bsz_res}")
-                result_seq.append(nlp_train_bsz_res)
+                result_bsz.append(nlp_train_bsz_res)
             except Exception as e:
                 logger.exception(e)
         ret_bsz = pd.concat(result_bsz)
