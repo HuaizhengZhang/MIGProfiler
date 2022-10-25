@@ -9,12 +9,17 @@ def single_instance_benchmark(
         device_str: str,
         cv_task_dataset_path: str,
         result_save_path: str,
-        logs_save_path: str):
+        logs_save_path: str,
+        hugginface_home: str,
+        torch_home: str,
+):
     cmd = f"docker run --rm --gpus '{str(device_str)}' --net mig_perf \
     --name profiler --cap-add SYS_ADMIN --shm-size=\"15g\" \
     -v {str(cv_task_dataset_path)}:/workspace/places365/  \
     -v {str(result_save_path)}:/workspace/data/ \
     -v {str(logs_save_path)}:/workspace/logs/  \
+    -v {str(hugginface_home)}:/workspace/huggingface/ \
+    -v {str(torch_home)}:/workspace/torch_models/ \
     mig-perf/profiler:1.0 \"model_name={str(model_name)}\" \"workload={str(workload)}\""
     p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     print(p.communicate()[0].decode("utf-8"))

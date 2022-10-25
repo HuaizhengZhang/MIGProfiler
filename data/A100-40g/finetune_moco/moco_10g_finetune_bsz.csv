@@ -1,6 +1,0 @@
-,model_name,batch_size,latency,latency_std,throughput,start_timestamp,end_timestamp,gract_mean,gract_std,fb_used_mean,fb_used_std
-0,resnet50_moco,8,51.52,0.75,155.27,1657286956,1657287077,0.861,0.128,2624.0,0.0
-1,resnet50_moco,16,87.18,0.02,183.53,1657287140,1657287261,0.87,0.127,3497.639,157.967
-2,resnet50_moco,32,159.41,0.03,200.74,1657287368,1657287489,0.871,0.127,4989.328,293.393
-3,resnet50_moco,64,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0
-4,resnet50_moco,128,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0

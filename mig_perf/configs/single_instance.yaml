@@ -8,4 +8,4 @@ benchmark_plan:
   sequence_lengths: [32, 64, 128, 256, 512]
 hydra:
   run:
-    dir: /workspace/logs/profiler/${now:%Y-%m-%d}/${now:%H-%M-%S}
+    dir: /workspace/data/logs/profiler/${now:%Y-%m-%d}/${now:%H-%M-%S}

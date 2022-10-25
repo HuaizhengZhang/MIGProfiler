@@ -1,6 +1,0 @@
-model_name,total_params,seq_length,batch_size,latency,latency_std,throughput,start_timestamp,end_timestamp
-bert-base-multilingual-cased,177853440,32,32,26.23,0.08,1219.93,1656775860,1656775980
-bert-base-multilingual-cased,177853440,64,32,52.95,0.02,604.34,1656775990,1656776110
-bert-base-multilingual-cased,177853440,128,32,109.6,0.03,291.96,1656776121,1656776241
-bert-base-multilingual-cased,177853440,256,32,243.79,0.04,131.26,1656776255,1656776375
-bert-base-multilingual-cased,177853440,512,32,598.26,0.06,53.49,1656776395,1656776515

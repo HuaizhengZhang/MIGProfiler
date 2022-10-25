@@ -1,14 +1,13 @@
 import logging
 from pathlib import Path
-
+import os
 import hydra
 import pandas as pd
 from omegaconf import DictConfig
 
+from mig_perf.profiler import PLACES365_DATA_DIR, RESULT_DATA_DIR
 from workload import cv_train, nlp_infer, nlp_train, cv_infer
 pd.set_option('display.max_columns', None)
-PLACES365_DATA_DIR = "places365/"
-RESULT_DATA_DIR = "data"
 
 """
  docker run -d --rm --gpus all --net mig_perf -p 9400:9400  \
@@ -26,7 +25,7 @@ mig-perf/profiler:1.0 "model_name=vision_transformer" "workload=cv_infer"
 """
 
 
-@hydra.main(version_base=None, config_path='../../configs', config_name='single_instance')
+@hydra.main(version_base=None, config_path='../configs', config_name='single_instance')
 def run(cfgs: DictConfig):
     model_name = cfgs.model_name
     workload = cfgs.workload
@@ -103,7 +102,8 @@ def run(cfgs: DictConfig):
                 logger.exception(e)
         ret_bsz = pd.concat(result_bsz)
         ret = pd.concat([ret_seq, ret_bsz])
-    # mount local volumn ./workspace
+    if not RESULT_DATA_DIR.exists():
+        os.makedirs(RESULT_DATA_DIR)
     save_file = Path(f'{RESULT_DATA_DIR}/{model_name}_{workload}.csv')
     if save_file.exists():
         ret.to_csv(f'{RESULT_DATA_DIR}/{model_name}_{workload}.csv', mode='a', header=False)

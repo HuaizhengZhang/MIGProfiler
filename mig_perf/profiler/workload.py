@@ -6,15 +6,14 @@ import requests
 import torch
 from torch import nn
 from tqdm import tqdm
+
+from mig_perf.profiler import DCGM_URL, GPU_I_ID
 from mig_perf.utils.data_hub import load_amazaon_review_data
 from mig_perf.utils.model_hub import load_nlp_model
 from mig_perf.utils.common import p99_latency
 from mig_perf.utils.data_hub import load_places365_data
 from mig_perf.utils.model_hub import load_cv_model
 # gpu metric reference: https://docs.nvidia.com/datacenter/dcgm/latest/dcgm-user-guide/feature-overview.html
-
-DCGM_URL = "http://dcgm_exporter:9400/metrics"
-GPU_I_ID = 1
 
 
 def cv_infer(
