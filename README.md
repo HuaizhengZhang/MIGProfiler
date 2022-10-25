@@ -1,64 +1,98 @@
-# A100_Benchmark
-A benchmark script for various deep learning workloads on Nvidia Ampere mig devices.
+# MIG Profiler
+A dockerized pipeline for NVIDIA MIG devices deep learning  workload profiling.
 
 ## Software
 
 DCGM  version: 2.4.6
 
-Mig-parted version 0.5.0
-
 Python 3.9.12
 
 ## Quick Start 
 
-## 1. Install DCGM
+## 1. Install 
 
-### Ubuntu LTS
-
-**Set up the CUDA network repository meta-data, GPG key:**
+**git install**
 
 ```bash
-$ wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/cuda-keyring_1.0-1_all.deb
-$ sudo dpkg -i cuda-keyring_1.0-1_all.deb
-$ sudo add-apt-repository "deb https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/ /"
+$ git clone https://github.com/MLSysOps/MIGProfiler.git
+$ cd MIGProfiler
+$ . install.sh
 ```
 
-**Install DCGM**
+##### Check installation
 
 ```bash
-$ sudo apt-get update \
-    && sudo apt-get install -y datacenter-gpu-manager
+$ docker images
 ```
 
-### Red Hat
+output:
 
-**Set up the CUDA network repository meta-data, GPG key:**
-
-```bash
-$ sudo dnf config-manager \
-    --add-repo https://developer.download.nvidia.com/compute/cuda/repos/rhel8/x86_64/cuda-rhel8.repo
+```
+REPOSITORY                         TAG                           IMAGE ID       CREATED          SIZE
+mig-perf/profiler                  1.0                           e42bff41025d   31 minutes ago   6.25GB
+nvcr.io/nvidia/k8s/dcgm-exporter   2.4.7-2.6.11-ubuntu20.04      f61f58af30cd   3 weeks ago      953MB
 ```
 
-**Install DCGM**
 
-```bash
-$ sudo dnf clean expire-cache \
-    && sudo dnf install -y datacenter-gpu-manager
-```
 
-### Check installation
+## 2. Run profiling container on a MIG device 
 
-```bash
-$ sudo systemctl --now enable nvidia-dcgm
-```
+Make sure that **no cuda process** is running on the GPU you are going to test.
 
-## 2. Prepare python environment
+1. enable MIG mode for `GPU 0`
 
-```shell
-$ conda env create -f environments.yaml
-$ conda activate benchmark
-$ pip install requirements.txt
-```
+   ```shell
+   $ nvidia-smi -i 0 -mig 1
+   ```
+
+2. get possible mig devices for `GPU 0` 
+
+   ```shell
+   $ nvidia-smi mig -i 0 -lgip
+   ```
+
+   output:
+
+   ```
+   +-----------------------------------------------------------------------------+
+   | GPU instance profiles:                                                      |
+   | GPU   Name             ID    Instances   Memory     P2P    SM    DEC   ENC  |
+   |                              Free/Total   GiB              CE    JPEG  OFA  |
+   |=============================================================================|
+   |   0  MIG 1g.10gb       19     4/7        9.50       No     14     0     0   |
+   |                                                             1     0     0   |
+   +-----------------------------------------------------------------------------+
+   |   0  MIG 1g.10gb+me    20     1/1        9.50       No     14     1     0   |
+   |                                                             1     1     1   |
+   +-----------------------------------------------------------------------------+
+   |   0  MIG 2g.20gb       14     2/3        19.50      No     28     1     0   |
+   |                                                             2     0     0   |
+   +-----------------------------------------------------------------------------+
+   |   0  MIG 3g.40gb        9     1/2        39.50      No     42     2     0   |
+   |                                                             3     0     0   |
+   +-----------------------------------------------------------------------------+
+   |   0  MIG 4g.40gb        5     0/1        39.50      No     56     2     0   |
+   |                                                             4     0     0   |
+   +-----------------------------------------------------------------------------+
+   |   0  MIG 7g.80gb        0     0/1        79.25      No     98     5     0   |
+   |                                                             7     1     1   |
+   +-----------------------------------------------------------------------------+
+   
+   ```
+
+   
+
+3. set up the mig device configuration you want to profile, for example, here we will profile on `MIG 4g.40gb`
+
+   ```shell
+   $ nvidia-smi mig -i 0 -cgi MIG 4g.40gb -C
+   ```
+
+   output:
+
+   
+
+4.  
 
 ## 3. Single instance profiling for a certain workload
 
