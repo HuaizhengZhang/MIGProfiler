@@ -7,7 +7,7 @@ import torch
 from torch import nn
 from tqdm import tqdm
 
-from mig_perf.profiler import DCGM_URL, GPU_I_ID
+from mig_perf.profiler import DCGM_URL
 from mig_perf.utils.data_hub import load_amazaon_review_data
 from mig_perf.utils.model_hub import load_nlp_model
 from mig_perf.utils.common import p99_latency
@@ -21,6 +21,7 @@ def cv_infer(
         fixed_time,
         batch_size,
         data_path,
+        gpu_i_id
 ):
     # create model
     model, input_size = load_cv_model(model_name=model_name)
@@ -32,7 +33,7 @@ def cv_infer(
     tail_latency, latency_std, throughput, gract, gract_std, fbusd, power, profile = _cv_fixed_time_infer(
         model=model, fixed_time=fixed_time,
         dataloader=dataloader, device=f'cuda:0',
-        gpu_i_id=GPU_I_ID, dcgm_url=DCGM_URL
+        gpu_i_id=gpu_i_id, dcgm_url=DCGM_URL
     )
     result = pd.DataFrame({
         'model_name': [model_name],
@@ -96,6 +97,7 @@ def cv_train(
         fixed_time,
         batch_size,
         data_path,
+        gpu_i_id,
         lr=1e-5,
         momentum=0.9,
         weight_decay=1e-4
@@ -116,7 +118,7 @@ def cv_train(
         criterion=criterion, optimizer=optimizer,
         model=model, fixed_time=fixed_time,
         dataloader=dataloader, device=f'cuda:0',
-        gpu_i_id=GPU_I_ID, dcgm_url=DCGM_URL
+        gpu_i_id=gpu_i_id, dcgm_url=DCGM_URL
     )
     result = pd.DataFrame({
         'model_name': [model_name],
@@ -186,6 +188,7 @@ def nlp_infer(
         fixed_time,
         seq_length,
         batch_size,
+        gpu_i_id,
 ):
     # create model
     model = load_nlp_model(model_name)
@@ -197,7 +200,7 @@ def nlp_infer(
     latency_mean, latency_std, throughput, gract, gract_std, fbusd, power, profile = _nlp_fixed_time_infer(
         model=model, fixed_time=fixed_time,
         dataloader=dataloader, device=f'cuda:0',
-        gpu_i_id=GPU_I_ID,
+        gpu_i_id=gpu_i_id,
         dcgm_url=DCGM_URL
     )
     result = pd.DataFrame({
@@ -263,6 +266,7 @@ def nlp_train(
         fixed_time,
         seq_length,
         batch_size,
+        gpu_i_id,
         lr=1e-5,
         weight_decay=1e-4
 ):
@@ -280,7 +284,7 @@ def nlp_train(
         model=model, fixed_time=fixed_time,
         dataloader=dataloader, device=f'cuda:0',
         criterion=criterion, optimizer=optimizer,
-        gpu_i_id=GPU_I_ID, dcgm_url=DCGM_URL
+        gpu_i_id=gpu_i_id, dcgm_url=DCGM_URL
     )
     result = pd.DataFrame({
         'model_name': [model_name],

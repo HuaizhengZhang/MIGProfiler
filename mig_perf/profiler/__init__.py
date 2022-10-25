@@ -6,4 +6,4 @@ TORCH_HOME = WORK_SPACE / "torch_models"
 HF_HOME = WORK_SPACE / "huggingface"
 
 DCGM_URL = "http://dcgm_exporter:9400/metrics"
-GPU_I_ID = 1
+gpu_i_id = 1

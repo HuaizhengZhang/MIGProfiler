@@ -29,6 +29,7 @@ mig-perf/profiler:1.0 "model_name=vision_transformer" "workload=cv_infer"
 def run(cfgs: DictConfig):
     model_name = cfgs.model_name
     workload = cfgs.workload
+    gpu_i_id = cfgs.gpu_i_id
     default_batchsize = cfgs.benchmark_plan.default_batchsize
     default_seqlenth = cfgs.benchmark_plan.default_seqlenth
     batch_sizes = cfgs.benchmark_plan.batch_sizes
@@ -41,7 +42,7 @@ def run(cfgs: DictConfig):
         result = []
         for batch_size in batch_sizes:
             try:
-                cv_infer_res = cv_infer(model_name, fixed_time, batch_size, PLACES365_DATA_DIR)
+                cv_infer_res = cv_infer(model_name, fixed_time, batch_size, PLACES365_DATA_DIR, gpu_i_id)
                 logger.info(f"batch size={batch_size} inference finished, result:\n{cv_infer_res}")
                 result.append(cv_infer_res)
             except Exception as e:
@@ -51,7 +52,7 @@ def run(cfgs: DictConfig):
         result = []
         for batch_size in batch_sizes:
             try:
-                cv_train_res = cv_train(model_name, fixed_time, batch_size, PLACES365_DATA_DIR)
+                cv_train_res = cv_train(model_name, fixed_time, batch_size, PLACES365_DATA_DIR, gpu_i_id)
                 result.append(cv_train_res)
                 logger.info(f"batch size={batch_size} training finished, result:\n{cv_train_res}")
             except Exception as e:
@@ -61,7 +62,7 @@ def run(cfgs: DictConfig):
         result_seq = []
         for seq_length in seq_lengths:
             try:
-                nlp_infer_seq_res = nlp_infer(model_name, fixed_time, batch_size=default_batchsize, seq_length=seq_length)
+                nlp_infer_seq_res = nlp_infer(model_name, fixed_time, batch_size=default_batchsize, seq_length=seq_length, gpu_i_id=gpu_i_id)
                 logger.info(f"batch size={default_batchsize} sequence length={seq_length} inference finished, result:\n{nlp_infer_seq_res}")
                 result_seq.append(nlp_infer_seq_res)
             except Exception as e:
@@ -70,7 +71,7 @@ def run(cfgs: DictConfig):
         result_bsz = []
         for batch_size in batch_sizes:
             try:
-                nlp_infer_bsz_res = nlp_infer(model_name, fixed_time, batch_size=batch_size, seq_length=default_seqlenth)
+                nlp_infer_bsz_res = nlp_infer(model_name, fixed_time, batch_size=batch_size, seq_length=default_seqlenth, gpu_i_id=gpu_i_id)
                 logger.info(
                     f"batch size={batch_size} sequence length={default_seqlenth} inference finished, result:\n{nlp_infer_bsz_res}")
                 result_bsz.append(nlp_infer_bsz_res)
@@ -83,7 +84,7 @@ def run(cfgs: DictConfig):
         for seq_length in seq_lengths:
             try:
                 nlp_train_seq_res = nlp_train(model_name, fixed_time, batch_size=default_batchsize,
-                                              seq_length=seq_length)
+                                              seq_length=seq_length, gpu_i_id=gpu_i_id)
                 logger.info(
                     f"batch size={default_batchsize} sequence length={seq_length} training finished, result:\n{nlp_train_seq_res}")
                 result_seq.append(nlp_train_seq_res)
@@ -94,7 +95,7 @@ def run(cfgs: DictConfig):
         for batch_size in batch_sizes:
             try:
                 nlp_train_bsz_res = nlp_train(model_name, fixed_time, batch_size=batch_size,
-                                              seq_length=default_seqlenth)
+                                              seq_length=default_seqlenth, gpu_i_id=gpu_i_id)
                 logger.info(
                     f"batch size={batch_size} sequence length={default_seqlenth} training finished, result:\n{nlp_train_bsz_res}")
                 result_bsz.append(nlp_train_bsz_res)
