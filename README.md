@@ -1,19 +1,15 @@
 # MIG Profiler
-A dockerized pipeline for NVIDIA MIG devices deep learning  workload profiling.
+A dockerized toolkit for NVIDIA MIG GPU devices deep learning profiling.
 
 ## Hardware
 
-Nvidia Ampere Series GPU
-
-## Software
-
-Docker 20.10.19
+Nvidia Ampere Series GPU with [MIG](https://www.nvidia.com/en-sg/technologies/multi-instance-gpu/) supports.
 
 ## Quick Start 
 
-## 1. Install 
+## 1. Installation 
 
-**git install**
+You can install the toolkit by Git and Github, make sure you have [Docker](https://www.docker.com/) installed on your device. 
 
 ```bash
 $ git clone https://github.com/MLSysOps/MIGProfiler.git
@@ -21,33 +17,26 @@ $ cd MIGProfiler
 $ . install.sh
 ```
 
-##### Check installation
+The installation script will help you fetch several Docker images, for example
 
-```bash
-$ docker images
-```
-
-output:
-
-```
+``` bash
 REPOSITORY                         TAG                           IMAGE ID       CREATED          SIZE
 mig-perf/profiler                  1.0                           e42bff41025d   31 minutes ago   6.25GB
 nvcr.io/nvidia/k8s/dcgm-exporter   2.4.7-2.6.11-ubuntu20.04      f61f58af30cd   3 weeks ago      953MB
 ```
 
 
-
-## 2. Run profiling container on a MIG device 
+## 2. Profiling Deep Learning Workloads
 
 Make sure that **no cuda process** is running on the GPU you are going to test.
 
-1. enable MIG mode for `GPU 0`
+1. Enable MIG mode for `GPU 0`,
 
    ```shell
    $ nvidia-smi -i 0 -mig 1
    ```
 
-2. get possible mig devices for `GPU 0` 
+2. Get possible mig devices for `GPU 0` ,
 
    ```shell
    $ nvidia-smi mig -i 0 -lgip
@@ -84,7 +73,7 @@ Make sure that **no cuda process** is running on the GPU you are going to test.
 
    
 
-3. set up the mig device configuration you want to profile, for example, here we will profile on `MIG 4g.40gb`
+3. Set up the MIG device configuration you want to profile. For example, here we will profile on `MIG 4g.40gb` configuration.
 
    ```shell
    $ nvidia-smi mig -i 0 -cgi 4g.40gb -C
@@ -95,10 +84,9 @@ Make sure that **no cuda process** is running on the GPU you are going to test.
    ```
    Successfully created GPU instance ID  2 on GPU  0 using profile MIG 4g.40gb (ID  5)
    Successfully created compute instance ID  0 on GPU  0 GPU instance ID  2 using profile MIG 4g.40gb (ID  3)
-   
    ```
 
-4. get  MIG device ids
+4. Acquire MIG device IDs
 
    ```shell
    $ nvidia-smi -L && nvidia-smi mig -lci
@@ -127,9 +115,9 @@ Make sure that **no cuda process** is running on the GPU you are going to test.
    
    ```
 
-   Here we get the `created 4g.40gb ` has `device_id=0`,  `gpu_instance_id=2 `
+   Here we get the `created 4g.40gb ` has `device_id=0`,  `gpu_instance_id=2 `.
 
-5.  start profiling
+5.  Sending Profiling Workloads
 
    ```shell
    # start dcgm-exporter
@@ -145,7 +133,7 @@ Make sure that **no cuda process** is running on the GPU you are going to test.
    $ docker stop dcgm_exporter
    ```
 
-​		arguments clarification: 
+​	**Arguments Clarification: **
 
   1. dcgm-exporter: we do not recommend you to change the arguments of dcgm-exporter container.
 
@@ -165,7 +153,7 @@ Make sure that **no cuda process** is running on the GPU you are going to test.
 
      results will be saved at ``path/to/MIGProfiler/data/`
 
-## 3. Visualize results
+## 3. Visualize Results
 
 We have visualized some results to look into the benchmark. You can refer to /doc/notebook/plot_results.ipynb to draw pcitures for your own data. Here are visualization results of profiling with seving a ViT model on NVIDIA A100. 
 
