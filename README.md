@@ -1,9 +1,6 @@
 # MIG Profiler
-A dockerized toolkit for NVIDIA MIG GPU devices deep learning profiling.
+A dockerized toolkit for Nvidia [MIG](https://www.nvidia.com/en-sg/technologies/multi-instance-gpu/) GPU (Ampere Series) profiling with deep learning workloads.
 
-## Hardware
-
-Nvidia Ampere Series GPU with [MIG](https://www.nvidia.com/en-sg/technologies/multi-instance-gpu/) supports.
 
 ## Quick Start 
 
@@ -30,13 +27,15 @@ nvcr.io/nvidia/k8s/dcgm-exporter   2.4.7-2.6.11-ubuntu20.04      f61f58af30cd   
 
 Make sure that **no cuda process** is running on the GPU you are going to test.
 
-1. Enable MIG mode for `GPU 0`,
+### 1. Enable MIG mode
+
+Currently, we only support profiling with `GPU 0`,
 
    ```shell
    $ nvidia-smi -i 0 -mig 1
    ```
 
-2. Get possible mig devices for `GPU 0` ,
+### 2. Get possible mig devices
 
    ```shell
    $ nvidia-smi mig -i 0 -lgip
@@ -73,7 +72,9 @@ Make sure that **no cuda process** is running on the GPU you are going to test.
 
    
 
-3. Set up the MIG device configuration you want to profile. For example, here we will profile on `MIG 4g.40gb` configuration.
+### 3. Set up the MIG device configuration
+
+You can set up the MIG configuration you would like to profile. For example, here we will profile on `MIG 4g.40gb` configuration.
 
    ```shell
    $ nvidia-smi mig -i 0 -cgi 4g.40gb -C
@@ -86,7 +87,7 @@ Make sure that **no cuda process** is running on the GPU you are going to test.
    Successfully created compute instance ID  0 on GPU  0 GPU instance ID  2 using profile MIG 4g.40gb (ID  3)
    ```
 
-4. Acquire MIG device IDs
+### 4. Acquire MIG device IDs
 
    ```shell
    $ nvidia-smi -L && nvidia-smi mig -lci
@@ -117,7 +118,7 @@ Make sure that **no cuda process** is running on the GPU you are going to test.
 
    Here we get the `created 4g.40gb ` has `device_id=0`,  `gpu_instance_id=2 `.
 
-5.  Sending Profiling Workloads
+### 5.  Sending profiling workloads
 
    ```shell
    # start dcgm-exporter
@@ -133,29 +134,27 @@ Make sure that **no cuda process** is running on the GPU you are going to test.
    $ docker stop dcgm_exporter
    ```
 
-​	**Arguments Clarification: **
+**Arguments Clarification:**
 
   1. dcgm-exporter: we do not recommend you to change the arguments of dcgm-exporter container.
 
   2. profiler:  `--gpus`: use format as "device={`gpu_id`}:{`device_id`}" to provide the target mig device to profiler container,
 
-     ​				`--shm-size`: shared memory for profiler container, we recommend that it should be larger than 4g.
+     - `--shm-size`: shared memory for profiler container, we recommend that it should be larger than 4g.
 
-     ​				`-v`: mounting data for container. use format as "`path/to/MIGProfiler/`data/:/workspace/data/"
+     - `-v`: mounting data for container. use format as `"path/to/MIGProfiler/data/:/workspace/data/"`.
 
-     ​				`model_name`: currently 'vision_transformer', 'resnet50', 'swin_transformer' is supported
+     - `model_name`: currently 'vision_transformer', 'resnet50', 'swin_transformer' is supported
 
-     ​				`workload`: according to your `model_name` and tasks(train or infer), four workloads are supported:
+     - `workload`: according to your `model_name` and tasks(train or infer), four workloads are supported: ' cv_infer', 'cv_train', 'nlp_infer', 'nlp_train'.
 
-     ​                                    ' cv_infer', 'cv_train', 'nlp_infer', 'nlp_train'.
+     - `gpu_i_id`: GPU Instance ID you get in `step 4`, this is for dcgm-exporter.
 
-     ​				`gpu_i_id`: GPU Instance ID you get in `step 4`, this is for dcgm-exporter.
-
-     results will be saved at ``path/to/MIGProfiler/data/`
+     results will be saved at `path/to/MIGProfiler/data/`.
 
 ## 3. Visualize Results
 
-We have visualized some results to look into the benchmark. You can refer to /doc/notebook/plot_results.ipynb to draw pcitures for your own data. Here are visualization results of profiling with seving a ViT model on NVIDIA A100. 
+We have visualized some results to look into the benchmark. You can refer to `/doc/notebook/plot_results.ipynb` to draw pcitures for your own data. Here are visualization results of profiling with seving a ViT model on NVIDIA A100. 
 
 
 |FB Used|Graphics Engine Activity|Avg. Latency (ms)|Throughput (request/s)|
