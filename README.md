@@ -29,7 +29,7 @@ Make sure that **no cuda process** is running on the GPU you are going to test.
 
 ### 1. Enable MIG mode
 
-Currently, we only support profiling with `GPU 0`,
+Choose a gpu that supports MIG on your machine for testing, here we use `GPU 0`,
 
    ```shell
    $ nvidia-smi -i 0 -mig 1
@@ -138,7 +138,8 @@ You can set up the MIG configuration you would like to profile. For example, her
 
   1. dcgm-exporter: we do not recommend you to change the arguments of dcgm-exporter container.
 
-  2. profiler:  `--gpus`: use format as "device={`gpu_id`}:{`device_id`}" to provide the target mig device to profiler container,
+  2. profiler:  
+     - `--gpus`: use format as "device={`gpu_id`}:{`device_id`}" to provide the target mig device to profiler container,
 
      - `--shm-size`: shared memory for profiler container, we recommend that it should be larger than 4g.
 
