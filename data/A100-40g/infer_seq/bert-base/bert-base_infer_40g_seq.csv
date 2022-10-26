@@ -1,6 +1,0 @@
-,model_name,total_params,seq_length,batch_size,latency,latency_std,throughput,start_timestamp,end_timestamp,gract_mean,gract_std,fb_used_mean,fb_used_std
-0,bert-base-multilingual-cased,177853440,32,32,11.03,0.11,2901.48,1656773474,1656773594,0.351,0.11,2641.636,3.983
-1,bert-base-multilingual-cased,177853440,64,32,10.77,0.08,2970.79,1656773604,1656773724,0.418,0.066,2709.074,10.14
-2,bert-base-multilingual-cased,177853440,128,32,14.6,0.07,2192.53,1656773734,1656773854,0.577,0.084,2802.0,0.0
-3,bert-base-multilingual-cased,177853440,256,32,32.46,0.01,985.91,1656773864,1656773984,0.645,0.069,2978.826,34.765
-4,bert-base-multilingual-cased,177853440,512,32,78.32,0.01,408.59,1656773995,1656774115,0.702,0.076,3749.603,4.346

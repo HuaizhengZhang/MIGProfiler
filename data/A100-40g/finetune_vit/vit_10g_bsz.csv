@@ -1,6 +1,0 @@
-model_name,batch_size,latency,latency_std,throughput,start_timestamp,end_timestamp
-vision_transformer,8,77.1,0.02,103.76,1657289877,1657289998
-vision_transformer,16,139.75,0.03,114.49,1657290097,1657290218
-vision_transformer,32,252.14,0.04,126.92,1657290313,1657290434
-vision_transformer,64,0,0,0,0,0
-vision_transformer,128,0,0,0,0,0

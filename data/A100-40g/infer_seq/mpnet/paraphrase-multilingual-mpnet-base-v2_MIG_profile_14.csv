@@ -1,6 +1,0 @@
-model_name,total_params,seq_length,batch_size,latency,latency_std,throughput,start_timestamp,end_timestamp
-paraphrase-multilingual-mpnet-base-v2,278043648,32,32,12.59,0.08,2541.19,1656771961,1656772081
-paraphrase-multilingual-mpnet-base-v2,278043648,64,32,24.61,0.02,1300.23,1656772091,1656772211
-paraphrase-multilingual-mpnet-base-v2,278043648,128,32,54.06,0.02,591.93,1656772221,1656772341
-paraphrase-multilingual-mpnet-base-v2,278043648,256,32,118.2,0.03,270.74,1656772353,1656772473
-paraphrase-multilingual-mpnet-base-v2,278043648,512,32,290.93,0.05,109.99,1656772488,1656772608
