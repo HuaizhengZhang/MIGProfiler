@@ -1,7 +1,7 @@
 echo "Download the Places365 standard easyformat"
 wget http://data.csail.mit.edu/places/places365/places365standard_easyformat.tar
 echo "Start to extract files"
-tar -xvf places365standard_easyformat.tar -C ./data/
+mkdir ./data/ && tar -xvf places365standard_easyformat.tar -C ./data/
 echo "Finish extracting files"
 cp docker/.dockerignore ./.dockerignore
 cp docker/ubuntu.Dockerfile ./ubuntu.Dockerfile
