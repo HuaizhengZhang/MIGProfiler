@@ -32,13 +32,13 @@ Make sure that **no cuda process** is running on the GPU you are going to test.
 Choose a gpu that supports MIG on your machine for testing, here we use `GPU 0`,
 
    ```shell
-   $ nvidia-smi -i 0 -mig 1
+   $ sudo nvidia-smi -i 0 -mig 1
    ```
 
 ### 2. Get possible mig devices
 
    ```shell
-   $ nvidia-smi mig -i 0 -lgip
+   $ sudo nvidia-smi mig -i 0 -lgip
    ```
 
    output:
@@ -77,7 +77,7 @@ Choose a gpu that supports MIG on your machine for testing, here we use `GPU 0`,
 You can set up the MIG configuration you would like to profile. For example, here we will profile on `MIG 4g.40gb` configuration.
 
    ```shell
-   $ nvidia-smi mig -i 0 -cgi 4g.40gb -C
+   $ sudo nvidia-smi mig -i 0 -cgi 4g.40gb -C
    ```
 
    output:
@@ -90,7 +90,7 @@ You can set up the MIG configuration you would like to profile. For example, her
 ### 4. Acquire MIG device IDs
 
    ```shell
-   $ nvidia-smi -L && nvidia-smi mig -lci
+   $ nvidia-smi -L && sudo nvidia-smi mig -lci
    ```
 
    output:
@@ -121,6 +121,8 @@ You can set up the MIG configuration you would like to profile. For example, her
 ### 5.  Sending profiling workloads
 
    ```shell
+   #create network
+   $ docker network create mig_perf
    # start dcgm-exporter
    $ docker run -d --rm --gpus all --net mig_perf -p 9400:9400  \
    --name dcgm_exporter --cap-add SYS_ADMIN   nvcr.io/nvidia/k8s/dcgm-exporter:2.4.7-2.6.11-ubuntu20.04 \
