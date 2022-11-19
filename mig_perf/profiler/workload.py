@@ -37,6 +37,7 @@ def cv_infer(
     )
     result = pd.DataFrame({
         'model_name': [model_name],
+        'workload': ['cv_infer'],
         'batch_size': [batch_size],
         'latency': [tail_latency],
         'latency_std': [latency_std],
@@ -122,6 +123,7 @@ def cv_train(
     )
     result = pd.DataFrame({
         'model_name': [model_name],
+        'workload': ['cv_train'],
         'batch_size': [batch_size],
         'latency': [tail_latency],
         'latency_std': [latency_std],
@@ -205,6 +207,7 @@ def nlp_infer(
     )
     result = pd.DataFrame({
         'model_name': [model_name],
+        'workload': ['nlp_infer'],
         'batch_size': [batch_size],
         'seq_length': [seq_length],
         'latency': [latency_mean],
@@ -288,6 +291,7 @@ def nlp_train(
     )
     result = pd.DataFrame({
         'model_name': [model_name],
+        'workload': ['nlp_train'],
         'batch_size': [batch_size],
         'seq_length': [seq_length],
         'latency': [latency_mean],

@@ -70,7 +70,7 @@ def set_style():
         "ytick.labelsize": 16,
     }
 
-    mpl.rcParams.update(nice_fonts)
+    update(nice_fonts)
 
 
 def my_plotter(legends, means_list, x_labels, title, y_axis_name, x_axis_name, save_path, legend_pos, barlabel_fmt, std_list=None):
@@ -122,10 +122,9 @@ def model_compare_draw(result: pd.DataFrame, result_dir):
         latency_list += [model_instance_group.loc[:, 'latency']]
         latency_std_list += [model_instance_group.loc[:, 'latency_std']]
         throughput_list += [model_instance_group.loc[:, 'throughput']]
-        gract_list += [model_instance_group.loc[:, 'gract_mean']]
+        gract_list += [model_instance_group.loc[:, 'gract']]
         gract_std_list += [model_instance_group.loc[:, 'gract_std']]
-        fbusd_list += [model_instance_group.loc[:, 'fb_used_mean']]
-        fbusd_std_list += [model_instance_group.loc[:, 'fb_used_std']]
+        fbusd_list += [model_instance_group.loc[:, 'fbusd']]
     my_plotter(
         title="multilingual models latency comparison",
         legends=instances,
@@ -185,16 +184,14 @@ def bsz_draw(result: pd.DataFrame, picture_dir):
         gract_list = []
         gract_std_list = []
         fbusd_list = []
-        fbusd_std_list = []
         for instance, model_instance_group in model_group.groupby('mig_profile'):
             instances += [str(instance)]
             latency_list += [model_instance_group.loc[:, 'latency']]
             latency_std_list += [model_instance_group.loc[:, 'latency_std']]
             throughput_list += [model_instance_group.loc[:, 'throughput']]
-            gract_list += [model_instance_group.loc[:, 'gract_mean']]
+            gract_list += [model_instance_group.loc[:, 'gract']]
             gract_std_list += [model_instance_group.loc[:, 'gract_std']]
-            fbusd_list += [model_instance_group.loc[:, 'fb_used_mean']]
-            fbusd_std_list += [model_instance_group.loc[:, 'fb_used_std']]
+            fbusd_list += [model_instance_group.loc[:, 'fbusd']]
 
         my_plotter(
             legends=instances,
@@ -253,16 +250,14 @@ def seq_draw(result: pd.DataFrame, picture_dir):
         gract_list = []
         gract_std_list = []
         fbusd_list = []
-        fbusd_std_list = []
         for instance, model_instance_group in model_group.groupby('mig_profile'):
             instances += [str(instance)]
             latency_list += [model_instance_group.loc[:, 'latency']]
             latency_std_list += [model_instance_group.loc[:, 'latency_std']]
             throughput_list += [model_instance_group.loc[:, 'throughput']]
-            gract_list += [model_instance_group.loc[:, 'gract_mean']]
+            gract_list += [model_instance_group.loc[:, 'gract']]
             gract_std_list += [model_instance_group.loc[:, 'gract_std']]
-            fbusd_list += [model_instance_group.loc[:, 'fb_used_mean']]
-            fbusd_std_list += [model_instance_group.loc[:, 'fb_used_std']]
+            fbusd_list += [model_instance_group.loc[:, 'fbusd']]
 
         my_plotter(
             legends=instances,
@@ -313,5 +308,5 @@ def seq_draw(result: pd.DataFrame, picture_dir):
 
 
 if __name__ == '__main__':
-    result = pd.read_csv('/data/A100-80g/train/cv\integrated_result.csv')
-    bsz_draw(result, "/data/A100-80g/train/cv")
+    result = pd.read_csv('/data/results/A30/vision_transformer_cv_infer.csv')
+    bsz_draw(result, "E:\MIGProfiler\data\pictures\A30")
