@@ -1,13 +1,11 @@
-import re
 import numpy as np
 import pandas as pd
 import time
-import requests
 import torch
 from torch import nn
 from tqdm import tqdm
 
-from mig_perf.profiler import DCGM_URL
+from mig_perf.exporter.dcgm_exporter import dcgm_exporter
 from mig_perf.utils.data_hub import load_amazaon_review_data
 from mig_perf.utils.model_hub import load_nlp_model
 from mig_perf.utils.common import p99_latency
@@ -33,11 +31,12 @@ def cv_infer(
     tail_latency, latency_std, throughput, gract, gract_std, fbusd, power, profile = _cv_fixed_time_infer(
         model=model, fixed_time=fixed_time,
         dataloader=dataloader, device=f'cuda:0',
-        gpu_i_id=gpu_i_id, dcgm_url=DCGM_URL
+        gpu_i_id=gpu_i_id,
     )
     result = pd.DataFrame({
         'model_name': [model_name],
         'workload': ['cv_infer'],
+        'mig_profile': [profile],
         'batch_size': [batch_size],
         'latency': [tail_latency],
         'latency_std': [latency_std],
@@ -46,12 +45,11 @@ def cv_infer(
         'gract_std': [gract_std],
         'fbusd': [float(fbusd)],
         'power': [float(power)],
-        'mig_profile': [profile]
     }).round(2)
     return result
 
 
-def _cv_fixed_time_infer(model, gpu_i_id, dcgm_url, fixed_time, dataloader, device):
+def _cv_fixed_time_infer(model, gpu_i_id, fixed_time, dataloader, device):
     model = model.to(device)
     model.eval()
     latency = []
@@ -74,7 +72,7 @@ def _cv_fixed_time_infer(model, gpu_i_id, dcgm_url, fixed_time, dataloader, devi
                 end_timestamp = int(time.time())
                 total_sample += len(inputs)
             if i % 10 == 0:
-                gract, fbusd, power, profile = dcgm_exporter(gpu_i_id, dcgm_url)
+                gract, fbusd, power, profile = dcgm_exporter(gpu_i_id)
                 gract_list.append(float(gract))
                 fbusd_list.append(float(fbusd))
                 power_list.append(float(power))
@@ -119,11 +117,12 @@ def cv_train(
         criterion=criterion, optimizer=optimizer,
         model=model, fixed_time=fixed_time,
         dataloader=dataloader, device=f'cuda:0',
-        gpu_i_id=gpu_i_id, dcgm_url=DCGM_URL
+        gpu_i_id=gpu_i_id
     )
     result = pd.DataFrame({
         'model_name': [model_name],
         'workload': ['cv_train'],
+        'mig_profile': [profile],
         'batch_size': [batch_size],
         'latency': [tail_latency],
         'latency_std': [latency_std],
@@ -132,12 +131,11 @@ def cv_train(
         'gract_std': [gract_std],
         'fbusd': [float(fbusd)],
         'power': [float(power)],
-        'mig_profile': [profile]
     }).round(2)
     return result
 
 
-def _cv_fixed_time_train(model, fixed_time, dataloader, criterion, optimizer, device, gpu_i_id, dcgm_url):
+def _cv_fixed_time_train(model, fixed_time, dataloader, criterion, optimizer, device, gpu_i_id):
     model = model.to(device)
     model.eval()
     latency = []
@@ -166,7 +164,7 @@ def _cv_fixed_time_train(model, fixed_time, dataloader, criterion, optimizer, de
                 end_timestamp = int(time.time())
                 total_sample += len(inputs)
             if i % 10 == 0:
-                gract, fbusd, power, profile = dcgm_exporter(gpu_i_id, dcgm_url)
+                gract, fbusd, power, profile = dcgm_exporter(gpu_i_id)
                 gract_list.append(float(gract))
                 fbusd_list.append(float(fbusd))
                 power_list.append(float(power))
@@ -203,11 +201,11 @@ def nlp_infer(
         model=model, fixed_time=fixed_time,
         dataloader=dataloader, device=f'cuda:0',
         gpu_i_id=gpu_i_id,
-        dcgm_url=DCGM_URL
     )
     result = pd.DataFrame({
         'model_name': [model_name],
         'workload': ['nlp_infer'],
+        'mig_profile': [profile],
         'batch_size': [batch_size],
         'seq_length': [seq_length],
         'latency': [latency_mean],
@@ -217,12 +215,11 @@ def nlp_infer(
         'gract_std': [gract_std],
         'fbusd': [float(fbusd)],
         'power': [float(power)],
-        'mig_profile': [profile]
     }).round(2)
     return result
 
 
-def _nlp_fixed_time_infer(model, fixed_time, dataloader, device, gpu_i_id, dcgm_url):
+def _nlp_fixed_time_infer(model, fixed_time, dataloader, device, gpu_i_id):
     model = model.to(device)
     model.eval()
     latency = []
@@ -243,9 +240,9 @@ def _nlp_fixed_time_infer(model, fixed_time, dataloader, device, gpu_i_id, dcgm_
             if i >= 20:
                 latency += [starter.elapsed_time(ender)]
                 end_timestamp = int(time.time())
-                total_sample += len(inputs)
+                total_sample += len(inputs['input_ids'])
             if i % 10 == 0:
-                gract, fbusd, power, profile = dcgm_exporter(gpu_i_id, dcgm_url)
+                gract, fbusd, power, profile = dcgm_exporter(gpu_i_id)
                 gract_list.append(float(gract))
                 fbusd_list.append(float(fbusd))
                 power_list.append(float(power))
@@ -287,11 +284,12 @@ def nlp_train(
         model=model, fixed_time=fixed_time,
         dataloader=dataloader, device=f'cuda:0',
         criterion=criterion, optimizer=optimizer,
-        gpu_i_id=gpu_i_id, dcgm_url=DCGM_URL
+        gpu_i_id=gpu_i_id,
     )
     result = pd.DataFrame({
         'model_name': [model_name],
         'workload': ['nlp_train'],
+        'mig_profile': [profile],
         'batch_size': [batch_size],
         'seq_length': [seq_length],
         'latency': [latency_mean],
@@ -301,12 +299,11 @@ def nlp_train(
         'gract_std': gract_std,
         'fbusd': [float(fbusd)],
         'power': [float(power)],
-        'mig_profile': [profile]
     }).round(2)
     return result
 
 
-def _nlp_fixed_time_train(model, fixed_time, dataloader, criterion, optimizer, device, gpu_i_id, dcgm_url):
+def _nlp_fixed_time_train(model, fixed_time, dataloader, criterion, optimizer, device, gpu_i_id):
     model = model.to(device)
     model.eval()
     latency = []
@@ -333,9 +330,9 @@ def _nlp_fixed_time_train(model, fixed_time, dataloader, criterion, optimizer, d
             if i >= 20:
                 latency += [starter.elapsed_time(ender)]
                 end_timestamp = int(time.time())
-                total_sample += len(inputs)
+                total_sample += len(inputs['input_ids'])
             if i % 10 == 0:
-                gract, fbusd, power, profile = dcgm_exporter(gpu_i_id, dcgm_url)
+                gract, fbusd, power, profile = dcgm_exporter(gpu_i_id)
                 gract_list.append(float(gract))
                 fbusd_list.append(float(fbusd))
                 power_list.append(float(power))
@@ -353,22 +350,5 @@ def _nlp_fixed_time_train(model, fixed_time, dataloader, criterion, optimizer, d
 
     return latency_mean, latency_std, throughput, gract_mean, gract_std, fbusd_mean, power_mean, profile
 
-
-def dcgm_exporter(gpu_i_id, url):
-    metric = requests.get(url).text
-    if metric is None:
-        return None
-    for line in metric.splitlines():
-        if line[0] != '#':
-            gid = re.search(r"GPU_I_ID=\"(.)\"", line).group(1)
-            if gid == str(gpu_i_id):
-                profile = re.search(r"GPU_I_PROFILE=\"([0-9]g.[0-9]*gb)", line).group(1)
-                if line.split('{')[0] == "DCGM_FI_DEV_FB_USED":
-                    fbusd = line.split(' ')[-1]
-                if line.split('{')[0] == "DCGM_FI_PROF_GR_ENGINE_ACTIVE":
-                    gract = line.split(' ')[-1]
-                if line.split('{')[0] == "DCGM_FI_DEV_POWER_USAGE":
-                    power = line.split(' ')[-1]
-    return gract, fbusd, power, profile
 
 

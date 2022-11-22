@@ -70,7 +70,6 @@ def set_style():
         "ytick.labelsize": 16,
     }
 
-    update(nice_fonts)
 
 
 def my_plotter(legends, means_list, x_labels, title, y_axis_name, x_axis_name, save_path, legend_pos, barlabel_fmt, std_list=None):
@@ -175,70 +174,83 @@ def model_compare_draw(result: pd.DataFrame, result_dir):
 
 
 def bsz_draw(result: pd.DataFrame, picture_dir):
+        for model_name, model_group in result.groupby('model_name'):
+            instances = []
+            latency_list = []
+            latency_std_list = []
+            throughput_list = []
+            gract_list = []
+            gract_std_list = []
+            fbusd_list = []
+            power_list = []
 
-    for model_name, model_group in result.groupby('model_name'):
-        instances = []
-        latency_list = []
-        latency_std_list = []
-        throughput_list = []
-        gract_list = []
-        gract_std_list = []
-        fbusd_list = []
-        for instance, model_instance_group in model_group.groupby('mig_profile'):
-            instances += [str(instance)]
-            latency_list += [model_instance_group.loc[:, 'latency']]
-            latency_std_list += [model_instance_group.loc[:, 'latency_std']]
-            throughput_list += [model_instance_group.loc[:, 'throughput']]
-            gract_list += [model_instance_group.loc[:, 'gract']]
-            gract_std_list += [model_instance_group.loc[:, 'gract_std']]
-            fbusd_list += [model_instance_group.loc[:, 'fbusd']]
+            for instance, model_instance_group in model_group.groupby('mig_profile'):
+                instances += [str(instance)]
+                latency_list += [model_instance_group.loc[:, 'latency']]
+                latency_std_list += [model_instance_group.loc[:, 'latency_std']]
+                throughput_list += [model_instance_group.loc[:, 'throughput']]
+                gract_list += [model_instance_group.loc[:, 'gract']]
+                gract_std_list += [model_instance_group.loc[:, 'gract_std']]
+                fbusd_list += [model_instance_group.loc[:, 'fbusd']]
+                power_list += [model_instance_group.loc[:, 'power']]
 
-        my_plotter(
-            legends=instances,
-            means_list=fbusd_list,
-            x_labels=model_instance_group.loc[:, 'batch_size'],
-            title=model_name,
-            x_axis_name="batch size",
-            y_axis_name="FB used",
-            save_path=f"{picture_dir}/{short_name[model_name]}_fbusd_bsz_compare.svg",
-            legend_pos='upper right',
-            barlabel_fmt='%.0f'
-        )
-        my_plotter(
-            legends=instances,
-            means_list=gract_list,
-            std_list=gract_std_list,
-            title=model_name,
-            x_labels=model_instance_group.loc[:, 'batch_size'],
-            x_axis_name="batch size",
-            y_axis_name="Graphics Engine Activity",
-            save_path=f"{picture_dir}/{short_name[model_name]}_gract_bsz_compare.svg",
-            legend_pos='upper right',
-            barlabel_fmt='%.2f'
-        )
-        my_plotter(
-            legends=instances,
-            means_list=latency_list,
-            std_list=latency_std_list,
-            title=model_name,
-            x_labels=model_instance_group.loc[:, 'batch_size'],
-            x_axis_name="batch size",
-            y_axis_name="latency(ms)",
-            save_path=f"{picture_dir}/{short_name[model_name]}_latency_bsz_compare.svg",
-            legend_pos='upper right',
-            barlabel_fmt='%.0f'
-        )
-        my_plotter(
-            legends=instances,
-            means_list=throughput_list,
-            title=model_name,
-            x_labels=model_instance_group.loc[:, 'batch_size'],
-            x_axis_name="batch size",
-            y_axis_name="throughput(/s)",
-            save_path=f"{picture_dir}/{short_name[model_name]}_throughput_bsz_compare.svg",
-            legend_pos='upper right',
-            barlabel_fmt='%.0f'
-        )
+            my_plotter(
+                legends=instances,
+                means_list=fbusd_list,
+                x_labels=model_instance_group.loc[:, 'batch_size'],
+                title=model_name,
+                x_axis_name="batch size",
+                y_axis_name="FB used",
+                save_path=f"{picture_dir}/{short_name[model_name]}_fbusd_bsz_compare.svg",
+                legend_pos='upper right',
+                barlabel_fmt='%.0f'
+            )
+            my_plotter(
+                legends=instances,
+                means_list=gract_list,
+                std_list=gract_std_list,
+                title=model_name,
+                x_labels=model_instance_group.loc[:, 'batch_size'],
+                x_axis_name="batch size",
+                y_axis_name="Graphics Engine Activity",
+                save_path=f"{picture_dir}/{short_name[model_name]}_gract_bsz_compare.svg",
+                legend_pos='upper right',
+                barlabel_fmt='%.2f'
+            )
+            my_plotter(
+                legends=instances,
+                means_list=latency_list,
+                std_list=latency_std_list,
+                title=model_name,
+                x_labels=model_instance_group.loc[:, 'batch_size'],
+                x_axis_name="batch size",
+                y_axis_name="latency(ms)",
+                save_path=f"{picture_dir}/{short_name[model_name]}_latency_bsz_compare.svg",
+                legend_pos='upper right',
+                barlabel_fmt='%.0f'
+            )
+            my_plotter(
+                legends=instances,
+                means_list=throughput_list,
+                title=model_name,
+                x_labels=model_instance_group.loc[:, 'batch_size'],
+                x_axis_name="batch size",
+                y_axis_name="throughput(/s)",
+                save_path=f"{picture_dir}/{short_name[model_name]}_throughput_bsz_compare.svg",
+                legend_pos='upper right',
+                barlabel_fmt='%.0f'
+            )
+            my_plotter(
+                legends=instances,
+                means_list=power_list,
+                title=model_name,
+                x_labels=model_instance_group.loc[:, 'batch_size'],
+                x_axis_name="batch size",
+                y_axis_name="power(watt)",
+                save_path=f"{picture_dir}/{short_name[model_name]}_power_bsz_compare.svg",
+                legend_pos='upper right',
+                barlabel_fmt='%.0f'
+            )
 
 
 def seq_draw(result: pd.DataFrame, picture_dir):
@@ -250,6 +262,7 @@ def seq_draw(result: pd.DataFrame, picture_dir):
         gract_list = []
         gract_std_list = []
         fbusd_list = []
+        power_list = []
         for instance, model_instance_group in model_group.groupby('mig_profile'):
             instances += [str(instance)]
             latency_list += [model_instance_group.loc[:, 'latency']]
@@ -258,6 +271,7 @@ def seq_draw(result: pd.DataFrame, picture_dir):
             gract_list += [model_instance_group.loc[:, 'gract']]
             gract_std_list += [model_instance_group.loc[:, 'gract_std']]
             fbusd_list += [model_instance_group.loc[:, 'fbusd']]
+            power_list += [model_instance_group.loc[:, 'power']]
 
         my_plotter(
             legends=instances,
@@ -305,8 +319,19 @@ def seq_draw(result: pd.DataFrame, picture_dir):
             legend_pos='upper right',
             barlabel_fmt='%.0f'
         )
+        my_plotter(
+            legends=instances,
+            means_list=power_list,
+            title=model_name,
+            x_labels=model_instance_group.loc[:, 'seq_length'],
+            x_axis_name="sequence length",
+            y_axis_name="power(watt)",
+            save_path=f"{picture_dir}/{short_name[model_name]}_power_seq_compare.svg",
+            legend_pos='upper right',
+            barlabel_fmt='%.0f'
+        )
 
 
 if __name__ == '__main__':
-    result = pd.read_csv('/data/results/A30/vision_transformer_cv_infer.csv')
-    bsz_draw(result, "E:\MIGProfiler\data\pictures\A30")
+    result = pd.read_csv('E:\MIGProfiler\data/results\A30/bert_seq_train.txt')
+    seq_draw(result, "E:\MIGProfiler\data\pictures\A30/train")

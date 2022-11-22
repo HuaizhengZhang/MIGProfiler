@@ -1,9 +1,6 @@
-import os
-from pathlib import Path
-
 import pandas as pd
-DATA_DIR = Path(os.getcwd()).parent.parent / Path("data/results/A30/")
-METRICS_DIR = Path(os.getcwd()).parent.parent / Path("mig_perf/metrics/metrics.txt")
+
+from mig_perf.exporter import METRICS_DIR, DATA_DIR
 
 
 class MIGPerfExporter:

@@ -1,6 +1,6 @@
 model_name: vision_transformer
 workload: cv_infer
-gpu_i_id: 1
+gpu_i_id: None
 benchmark_plan:
   fixed_time: 60
   default_batchsize: 32
