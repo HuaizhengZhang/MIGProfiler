@@ -60,56 +60,70 @@ def run(cfgs: DictConfig):
         ret = pd.concat(result)
     if workload == 'nlp_infer':
         result_seq = []
-        for seq_length in seq_lengths:
-            try:
-                nlp_infer_seq_res = nlp_infer(model_name, fixed_time, batch_size=default_batchsize, seq_length=seq_length, gpu_i_id=gpu_i_id)
-                logger.info(f"batch size={default_batchsize} sequence length={seq_length} inference finished, result:\n{nlp_infer_seq_res}")
-                result_seq.append(nlp_infer_seq_res)
-            except Exception as e:
-                logger.exception(e)
-        ret_seq = pd.concat(result_seq)
+        if seq_lengths:
+            for seq_length in seq_lengths:
+                try:
+                    nlp_infer_seq_res = nlp_infer(model_name, fixed_time, batch_size=default_batchsize, seq_length=seq_length, gpu_i_id=gpu_i_id)
+                    logger.info(f"batch size={default_batchsize} sequence length={seq_length} inference finished, result:\n{nlp_infer_seq_res}")
+                    result_seq.append(nlp_infer_seq_res)
+                except Exception as e:
+                    logger.exception(e)
+            ret_seq = pd.concat(result_seq)
         result_bsz = []
-        for batch_size in batch_sizes:
-            try:
-                nlp_infer_bsz_res = nlp_infer(model_name, fixed_time, batch_size=batch_size, seq_length=default_seqlenth, gpu_i_id=gpu_i_id)
-                logger.info(
-                    f"batch size={batch_size} sequence length={default_seqlenth} inference finished, result:\n{nlp_infer_bsz_res}")
-                result_bsz.append(nlp_infer_bsz_res)
-            except Exception as e:
-                logger.exception(e)
-        ret_bsz = pd.concat(result_bsz)
-        ret = pd.concat([ret_seq, ret_bsz])
+        if batch_sizes:
+            for batch_size in batch_sizes:
+                try:
+                    nlp_infer_bsz_res = nlp_infer(model_name, fixed_time, batch_size=batch_size, seq_length=default_seqlenth, gpu_i_id=gpu_i_id)
+                    logger.info(
+                        f"batch size={batch_size} sequence length={default_seqlenth} inference finished, result:\n{nlp_infer_bsz_res}")
+                    result_bsz.append(nlp_infer_bsz_res)
+                except Exception as e:
+                    logger.exception(e)
+            ret_bsz = pd.concat(result_bsz)
+        if seq_lengths and batch_sizes:
+            ret = pd.concat([ret_seq, ret_bsz])
+        elif seq_lengths:
+            ret = ret_seq
+        elif batch_sizes:
+            ret = ret_bsz
     if workload == 'nlp_train':
         result_seq = []
-        for seq_length in seq_lengths:
-            try:
-                nlp_train_seq_res = nlp_train(model_name, fixed_time, batch_size=default_batchsize,
-                                              seq_length=seq_length, gpu_i_id=gpu_i_id)
-                logger.info(
-                    f"batch size={default_batchsize} sequence length={seq_length} training finished, result:\n{nlp_train_seq_res}")
-                result_seq.append(nlp_train_seq_res)
-            except Exception as e:
-                logger.exception(e)
-        ret_seq = pd.concat(result_seq)
+        if seq_lengths:
+            for seq_length in seq_lengths:
+                try:
+                    nlp_train_seq_res = nlp_train(model_name, fixed_time, batch_size=default_batchsize,
+                                                  seq_length=seq_length, gpu_i_id=gpu_i_id)
+                    logger.info(
+                        f"batch size={default_batchsize} sequence length={seq_length} training finished, result:\n{nlp_train_seq_res}")
+                    result_seq.append(nlp_train_seq_res)
+                except Exception as e:
+                    logger.exception(e)
+            ret_seq = pd.concat(result_seq)
         result_bsz = []
-        for batch_size in batch_sizes:
-            try:
-                nlp_train_bsz_res = nlp_train(model_name, fixed_time, batch_size=batch_size,
-                                              seq_length=default_seqlenth, gpu_i_id=gpu_i_id)
-                logger.info(
-                    f"batch size={batch_size} sequence length={default_seqlenth} training finished, result:\n{nlp_train_bsz_res}")
-                result_bsz.append(nlp_train_bsz_res)
-            except Exception as e:
-                logger.exception(e)
-        ret_bsz = pd.concat(result_bsz)
-        ret = pd.concat([ret_seq, ret_bsz])
+        if batch_sizes:
+            for batch_size in batch_sizes:
+                try:
+                    nlp_train_bsz_res = nlp_train(model_name, fixed_time, batch_size=batch_size,
+                                                  seq_length=default_seqlenth, gpu_i_id=gpu_i_id)
+                    logger.info(
+                        f"batch size={batch_size} sequence length={default_seqlenth} training finished, result:\n{nlp_train_bsz_res}")
+                    result_bsz.append(nlp_train_bsz_res)
+                except Exception as e:
+                    logger.exception(e)
+            ret_bsz = pd.concat(result_bsz)
+        if seq_lengths and batch_sizes:
+            ret = pd.concat([ret_seq, ret_bsz])
+        elif seq_lengths:
+            ret = ret_seq
+        elif batch_sizes:
+            ret = ret_bsz
     if not RESULT_DATA_DIR.exists():
         os.makedirs(RESULT_DATA_DIR)
-    save_file = Path(f'{RESULT_DATA_DIR}/{model_name}_{workload}.csv')
+    save_file = Path(f'{RESULT_DATA_DIR}/{model_name}.csv')
     if save_file.exists():
-        ret.to_csv(f'{RESULT_DATA_DIR}/{model_name}_{workload}.csv', mode='a', header=False)
+        ret.to_csv(str(save_file), mode='a', header=False)
     else:
-        ret.to_csv(f'{RESULT_DATA_DIR}/{model_name}_{workload}.csv', mode='a', header=True)
+        ret.to_csv(str(save_file), mode='a', header=True)
     logger.info(f"final result: \n {ret}")
 
 
