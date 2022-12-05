@@ -114,6 +114,7 @@ if __name__ == '__main__':
     SERVER_PREPROCESSING = os.getenv('SERVER_PREPROCESSING', '0').upper() in ['1', 'TRUE', 'Y', 'YES']
 
     # Mask out other cuda devices
+    os.environ['CUDA_DEVICE_ORDER'] = "PCI_BUS_ID"
     os.environ['CUDA_VISIBLE_DEVICES'] = DEVICE_ID
 
     app = HttpServer(name='PyTorch-Inference-Server')

@@ -58,6 +58,8 @@ from threading import Thread
 import numpy as np
 import requests
 from tqdm import tqdm
+
+from client.monitor import DCGMMetricCollector
 from generator import WorkloadGenerator
 from utils.request import type_to_data_type, serialize_byte_tensor, DataType, make_restful_request_from_numpy
 # from utils.logger import Printer
@@ -91,6 +93,12 @@ def get_args():
     parser.add_argument('--data', type=str, default=DATA_PATH,
                         help=f'The path to your testing image. Default to {DATA_PATH}')
     parser.add_argument('-P', '--preprocessing', action='store_true', help='Use client preprocessing.')
+    # GPU related arguments
+    parser.add_argument('-i', '--gpu-id', type=int, default=0, help='GPU ID. Default to 0.')
+    parser.add_argument(
+        '-gi', '--gpu-instance-id', type=int, default=None,
+        help='GPU Instance ID. Specified when MIG is enabled.'
+    )
     return parser.parse_args()
 
 
@@ -111,42 +119,6 @@ def sender(url, request):
     })
     latency_list.append(latency)
     return result
-
-
-def metric_collector(args):
-    """Collect all metrics information from Redis."""
-    while is_running:
-        time.sleep(1)
-        for model_name in args.model:
-            aggr_stat_data = redis_client.hget(MONITOR_AGGREGATION_KEY, model_name)
-            data_collected_time = time.time()
-            if aggr_stat_data is not None:
-                aggr_stat = AggregationStat()
-                aggr_stat.ParseFromString(aggr_stat_data)
-                for metric_name, value in json_format.MessageToDict(aggr_stat).items():
-                    aggr_metric_result_dict[metric_name].append(value)
-                aggr_metric_result_dict['time'].append(data_collected_time - start_time)
-
-        # { ip: metric_protobuf }
-        stat_data_dict = redis_client.hgetall(MONITOR_STAT_KEY)
-        data_collected_time = time.time()
-        # { metric_name: { ip: ... } }
-        stat_dict = defaultdict(dict)
-        for ip_bytes, stat_data in stat_data_dict.items():
-            ip = ip_bytes.decode()
-            stat = SysStat()
-            stat.ParseFromString(stat_data)
-
-            # remove unwanted metrics
-            stat = json_format.MessageToDict(stat)
-            del stat['ip']
-            del stat['gpuCount']
-            for metric_name, value in stat.items():
-                stat_dict[metric_name][ip.replace('.', '[dot]')] = value
-
-        for metric_name, value in stat_dict.items():
-            metric_result_dict[metric_name].append(value)
-        metric_result_dict['time'].append(data_collected_time - start_time)
 
 
 def warm_up(args):
@@ -194,7 +166,6 @@ def send_stress_test_data(args):
     print(f'Generating {request_num} exadmples')
 
     start_time = time.time()
-    metric_collector_thread.start()
 
     with ThreadPoolExecutor(10) as executor:
         for arrive_time in tqdm(send_time_list[:request_num]):
@@ -245,20 +216,11 @@ def process_result(args):
     # report
     print(f'Failing test number: {fail_count}')
 
-    device_dict = dict()
-    for url, init_replica_config_dict in config.frontend.replicas.items():
-        ip = url.host
-        devices = set()
-        for init_replica_configs in init_replica_config_dict.values():
-            devices.update([replica_config.device for replica_config in init_replica_configs])
-        device_dict[ip] = list(devices)
-
     result = {
         'test_time': str(datetime.now()),
         'arrival_rate': args.rate, 'testing_time': args.time,
         'batch_size': args.bs, 'latency_list': latency_list, 'time_list': send_time_list,
         'default_model': args.model, 'service_name': args.name,
-        'load_balancer': config.frontend.load_balancer,
         'fail_count': fail_count, 'qps': request_num / (finish_time - start_time),
         'devices': json.dumps(device_dict), 'servers': list(device_dict.keys()),
         'client_preprocessing': args.preprocessing, 'config': config.export_json()
@@ -279,11 +241,9 @@ def process_result(args):
 
 if __name__ == '__main__':
     args_ = get_args()
-    # redis_client = RedisClient()
     metric_result_dict = defaultdict(list)
     aggr_metric_result_dict = defaultdict(list)
-    metric_collector_thread = Thread(target=metric_collector, args=(args_,))
-    is_running = True
+    dcgm_metrics_collector = DCGMMetricCollector(gpu_id=args_.gpu_id, gpu_instance_id=args_.gpu_instance_id)
 
     print('Testing on:')
     print(f'arrival rate: {args_.rate};', f'testing time: {args_.time};')
@@ -292,10 +252,11 @@ if __name__ == '__main__':
     print('Warming up...')
     warm_up(args_)
     print('Testing...')
+    dcgm_metrics_collector.start()
     send_stress_test_data(args_)
     print('Finish')
-    is_running = False  # noqa
-    # metric_collector_thread.join()
+    dcgm_metrics_collector.stop()
+
+    print(dcgm_metrics_collector.gpu_metrics_list)
 
     # process_result(args_)
-    # redis_client.close()
