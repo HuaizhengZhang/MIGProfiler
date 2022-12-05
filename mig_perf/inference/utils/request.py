@@ -6,6 +6,7 @@ Email: yli056@e.ntu.edu.sg
 Date: 7/8/2020
 Request data type related utility functions.
 """
+import pickle
 import struct
 from collections import defaultdict
 from enum import Enum
@@ -148,3 +149,59 @@ def deserialize_bytes_tensor(encoded_tensor):
         offset += l
         strs.append(sb)
     return np.array(strs, dtype=bytes)
+
+
+def make_restful_request_from_numpy(input_tensor: np.ndarray):
+    """Make the RESTful request here.
+
+    Args:
+        input_tensor (numpy.ndarray): The input tensor in numpy array format.
+    """
+
+    if not isinstance(input_tensor, (np.ndarray,)):
+        raise ValueError('input_tensor must be a numpy array')
+    datatype = type_to_data_type(input_tensor.dtype)
+
+    content = {
+        'shape': list(input_tensor.shape),
+        'datatype': datatype.name
+    }
+
+    if datatype == DataType.TYPE_BYTES:
+        content['raw_input_contents'] = serialize_byte_tensor(input_tensor).tobytes()
+    else:
+        content['raw_input_contents'] = input_tensor.tobytes()
+
+    files = {'content': pickle.dumps(content)}
+
+    return {'files': files}
+
+
+def decode_request_as_numpy(request):
+    """
+    From https://github.com/triton-inference-server/server/blob/796b631bd08f8e48ca4806d814f090636599a8f6/src/clients/python/library/tritonclient/grpc/__init__.py#L1588
+    Get the tensor data for input associated with this object in numpy format
+    Args:
+        request:
+    Returns:
+        np.array: The numpy array containing the response data for the tensor or
+            None if the data for specified tensor name is not found.
+    """
+    request_bytes = request.files.get('content').body
+    infer_request = pickle.loads(request_bytes)
+    shape = list(infer_request['shape'])
+    datatype = infer_request['datatype']
+    if datatype == 'TYPE_BYTES':
+        # String results contain a 4-byte string length
+        # followed by the actual string characters. Hence,
+        # need to decode the raw bytes to convert into
+        # array elements.
+        np_array = deserialize_bytes_tensor(infer_request['raw_input_contents'])
+    else:
+        np_array = np.frombuffer(
+            infer_request['raw_input_contents'],
+            dtype=model_data_type_to_np(datatype)
+        )
+    np_array = np.resize(np_array, shape)
+
+    return np_array

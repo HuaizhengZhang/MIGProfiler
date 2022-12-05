@@ -48,7 +48,6 @@ Notes:
 """
 import argparse
 import json
-import pickle
 import time
 from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -58,12 +57,11 @@ from threading import Thread
 
 import numpy as np
 import requests
-# from tqdm import tqdm
-
-from utils.dtype import type_to_data_type, serialize_byte_tensor, DataType
+from tqdm import tqdm
+from generator import WorkloadGenerator
+from utils.request import type_to_data_type, serialize_byte_tensor, DataType, make_restful_request_from_numpy
 # from utils.logger import Printer
 from utils.pipeline_manager import PreProcessor
-# from workload.generator import WorkloadGenerator
 
 DATA_PATH = str(Path(__file__).parent / 'n02124075_Egyptian_cat.jpg')
 SEED = 666
@@ -113,32 +111,6 @@ def sender(url, request):
     })
     latency_list.append(latency)
     return result
-
-
-def make_restful_request_from_numpy(input_tensor: np.ndarray):
-    """Make the RESTful request here.
-
-    Args:
-        input_tensor (numpy.ndarray): The input tensor in numpy array format.
-    """
-
-    if not isinstance(input_tensor, (np.ndarray,)):
-        raise ValueError('input_tensor must be a numpy array')
-    datatype = type_to_data_type(input_tensor.dtype)
-
-    content = {
-        'shape': list(input_tensor.shape),
-        'datatype': datatype.name
-    }
-
-    if datatype == DataType.TYPE_BYTES:
-        content['raw_input_contents'] = serialize_byte_tensor(input_tensor).tobytes()
-    else:
-        content['raw_input_contents'] = input_tensor.tobytes()
-
-    files = {'content': pickle.dumps(content)}
-
-    return {'files': files}
 
 
 def metric_collector(args):
@@ -311,7 +283,7 @@ if __name__ == '__main__':
     metric_result_dict = defaultdict(list)
     aggr_metric_result_dict = defaultdict(list)
     metric_collector_thread = Thread(target=metric_collector, args=(args_,))
-    # is_running = True
+    is_running = True
 
     print('Testing on:')
     print(f'arrival rate: {args_.rate};', f'testing time: {args_.time};')
@@ -320,7 +292,7 @@ if __name__ == '__main__':
     print('Warming up...')
     warm_up(args_)
     print('Testing...')
-    # send_stress_test_data(args_)
+    send_stress_test_data(args_)
     print('Finish')
     is_running = False  # noqa
     # metric_collector_thread.join()
