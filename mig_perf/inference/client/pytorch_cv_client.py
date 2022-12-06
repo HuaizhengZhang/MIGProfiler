@@ -61,7 +61,7 @@ from tqdm import tqdm
 
 from client.monitor import DCGMMetricCollector
 from generator import WorkloadGenerator
-from utils.request import type_to_data_type, serialize_byte_tensor, DataType, make_restful_request_from_numpy
+from utils.request import make_restful_request_from_numpy
 # from utils.logger import Printer
 from utils.pipeline_manager import PreProcessor
 
@@ -149,7 +149,7 @@ def send_stress_test_data(args):
 
     arrival_rate = args.rate
     duration = args.time
-    url = f'{args.url}/predict/{args.name}'
+    url = f'{args.url}/predict'
     with open(args.data, 'rb') as f:
         image = f.read()
     image_np = np.frombuffer(image, dtype=np.uint8)
@@ -192,7 +192,7 @@ def process_result(args):
             fail_count += 1
             print('.', end='')
             if fail_count % 20 == 0:
-                print()
+                print(fail_count)
 
     finish_time = time.time()
 
@@ -217,13 +217,12 @@ def process_result(args):
     print(f'Failing test number: {fail_count}')
 
     result = {
-        'test_time': str(datetime.now()),
+        'test_time': str(datetime.now()), 'start_time': start_time,
         'arrival_rate': args.rate, 'testing_time': args.time,
         'batch_size': args.bs, 'latency_list': latency_list, 'time_list': send_time_list,
         'default_model': args.model, 'service_name': args.name,
         'fail_count': fail_count, 'qps': request_num / (finish_time - start_time),
-        'devices': json.dumps(device_dict), 'servers': list(device_dict.keys()),
-        'client_preprocessing': args.preprocessing, 'config': config.export_json()
+        'client_preprocessing': args.preprocessing,
     }
 
     result.update(timing_metric_raw_result_dict)
@@ -232,11 +231,10 @@ def process_result(args):
     result['aggr_metrics'] = aggr_metric_result_dict
 
     # save the experiment records to the database and print to the console.
-    # TODO: change the database settings to the configuration file.
     # TODO: note that you need to change doc_name
-    Printer.add_record_to_database(result, db_name='ml_cloud_autoscaler',
-                                   address="mongodb://mongodb.withcap.org:27127/",
-                                   doc_name=args.database_name)
+    # Printer.add_record_to_database(result, db_name='ml_cloud_autoscaler',
+    #                                address="mongodb://mongodb.withcap.org:27127/",
+    #                                doc_name=args.database_name)
 
 
 if __name__ == '__main__':
@@ -252,11 +250,11 @@ if __name__ == '__main__':
     print('Warming up...')
     warm_up(args_)
     print('Testing...')
-    dcgm_metrics_collector.start()
+    # dcgm_metrics_collector.start()
     send_stress_test_data(args_)
     print('Finish')
-    dcgm_metrics_collector.stop()
+    # dcgm_metrics_collector.stop()
 
-    print(dcgm_metrics_collector.gpu_metrics_list)
+    # print(dcgm_metrics_collector.gpu_metrics_list)
 
-    # process_result(args_)
+    process_result(args_)

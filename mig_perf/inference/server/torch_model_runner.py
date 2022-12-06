@@ -79,7 +79,6 @@ class ModelRunner(object):
         if self.share_memory:
             self.model.share_memory()
 
-        print(loop)
         self._loop = loop or asyncio.get_event_loop()
 
         self.queue = []
