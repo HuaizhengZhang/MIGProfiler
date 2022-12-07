@@ -51,6 +51,7 @@ import json
 import time
 from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from copy import deepcopy
 from datetime import datetime
 from pathlib import Path
 from threading import Thread
@@ -61,6 +62,7 @@ from tqdm import tqdm
 
 from client.monitor import DCGMMetricCollector
 from generator import WorkloadGenerator
+from utils.misc import consolidate_list_of_dict
 from utils.request import make_restful_request_from_numpy
 # from utils.logger import Printer
 from utils.pipeline_manager import PreProcessor
@@ -72,7 +74,6 @@ request_num = 0
 
 results = set()
 
-latency_list = []
 send_time_list = []
 
 
@@ -84,7 +85,7 @@ def get_args():
                         help='A list of names of the used models. For example, resnet18.')
     parser.add_argument('--url', type=str, default='http://localhost:50075',
                         help='The host url of your services. Default to http://localhost:50075.')
-    parser.add_argument('-n', '--name', type=str, default='image_classification',
+    parser.add_argument('-T', '--task', type=str, default='image_classification',
                         help='The service name you are testing. Default to image_classification.')
     parser.add_argument('-dbn', '--database_name', type=str, default='test',
                         help='The database name you record data to. Default to test.')
@@ -117,7 +118,6 @@ def sender(url, request):
         'latency': latency,
         'client_server_rtt': client_server_rtt,
     })
-    latency_list.append(latency)
     return result
 
 
@@ -175,7 +175,7 @@ def send_stress_test_data(args):
 
 def process_result(args):
     timing_metric_names = [
-        'latency', 'client_server_rtt', # 'batching_time',
+        'latency', 'client_server_rtt',  # 'batching_time',
         'inference_time', 'postprocessing_time'
     ]
     if args.preprocessing:
@@ -219,29 +219,42 @@ def process_result(args):
     result = {
         'test_time': str(datetime.now()), 'start_time': start_time,
         'arrival_rate': args.rate, 'testing_time': args.time,
-        'batch_size': args.bs, 'latency_list': latency_list, 'time_list': send_time_list,
-        'default_model': args.model, 'service_name': args.name,
+        'batch_size': args.bs, 'time_list': send_time_list,
+        'model_name': args.model, 'task': args.task,
         'fail_count': fail_count, 'qps': request_num / (finish_time - start_time),
         'client_preprocessing': args.preprocessing,
     }
 
     result.update(timing_metric_raw_result_dict)
     result.update(timing_metric_aggr_result_dict)
-    result['metrics'] = metric_result_dict
-    result['aggr_metrics'] = aggr_metric_result_dict
+    gpu_metrics_list = deepcopy(dcgm_metrics_collector.gpu_metrics_list)
+    gpu_metrics_dict = consolidate_list_of_dict(gpu_metrics_list, depth=2)
+    # gpu_label_example = {
+    #     'gpu': '0', 'UUID': 'GPU-bd8c3d28-4b3e-e4ad-650a-4c5a3692b72f', 'device': 'nvidia0',
+    #     'modelName': 'NVIDIA A30', 'Hostname': '2e140b568f0c',
+    #     'GPU_I_PROFILE': '4g.24gb', 'GPU_I_ID': '0',
+    # }
+    gpu_labels: dict = gpu_metrics_dict[args.gpu_id, args.gpu_instance_id].pop('labels')[0]
+    result['metrics'] = gpu_metrics_dict
 
-    # save the experiment records to the database and print to the console.
-    # TODO: note that you need to change doc_name
-    # Printer.add_record_to_database(result, db_name='ml_cloud_autoscaler',
-    #                                address="mongodb://mongodb.withcap.org:27127/",
-    #                                doc_name=args.database_name)
+    # export config
+    config = {
+        'client_args': vars(args),
+        'gpu_static_profile': gpu_labels,
+        'mig': {
+            'enabled': gpu_labels.get('GPU_I_ID', None) is not None,
+            'gpu_instance_id': gpu_labels.get('GPU_I_ID', None),
+            'gpu_instance_profile': gpu_labels.get('GPU_I_PROFILE', None),
+        },
+    }
+    result['gpu_model_name'] = config['gpu_static_profile']['modelName']
+    result['config'] = config
+    return result
 
 
 if __name__ == '__main__':
     args_ = get_args()
-    metric_result_dict = defaultdict(list)
-    aggr_metric_result_dict = defaultdict(list)
-    dcgm_metrics_collector = DCGMMetricCollector(gpu_id=args_.gpu_id, gpu_instance_id=args_.gpu_instance_id)
+    dcgm_metrics_collector = DCGMMetricCollector()
 
     print('Testing on:')
     print(f'arrival rate: {args_.rate};', f'testing time: {args_.time};')
@@ -250,11 +263,15 @@ if __name__ == '__main__':
     print('Warming up...')
     warm_up(args_)
     print('Testing...')
-    # dcgm_metrics_collector.start()
+    dcgm_metrics_collector.start()
     send_stress_test_data(args_)
     print('Finish')
-    # dcgm_metrics_collector.stop()
 
-    # print(dcgm_metrics_collector.gpu_metrics_list)
-
-    process_result(args_)
+    metrics = process_result(args_)
+    dcgm_metrics_collector.stop()
+    print(metrics)
+    # save the experiment records to the database and print to the console.
+    # TODO: note that you need to change doc_name
+    # Printer.add_record_to_database(metrics, db_name='ml_cloud_autoscaler',
+    #                                address="mongodb://mongodb.withcap.org:27127/",
+    #                                doc_name=args.database_name)

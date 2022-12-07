@@ -14,7 +14,7 @@ from prometheus_client.parser import text_string_to_metric_families
 
 
 def dcgm_gpu_metric_parser(metrics: str):
-    # (gpu_id, gpu_instance_id) -> metrics
+    # gpu_id -> { gpu_instance_id -> metrics }
     # if no gpu instance (MIG not enabled), gpu_instance_id is None
     gpu_metrics_dict = defaultdict(dict)
     for family in text_string_to_metric_families(metrics):
@@ -26,19 +26,16 @@ def dcgm_gpu_metric_parser(metrics: str):
                 gpu_instance_id = int(labels['GPU_I_ID'])
             else:
                 gpu_instance_id = None
-            current_id = gpu_id, gpu_instance_id
 
-            if not gpu_metrics_dict[current_id]:
-                gpu_metrics_dict[current_id].update(labels)
-            gpu_metrics_dict[current_id][name] = value
+            if not gpu_metrics_dict[gpu_id, gpu_instance_id]:
+                gpu_metrics_dict[gpu_id, gpu_instance_id]['labels'] = labels
+            gpu_metrics_dict[gpu_id, gpu_instance_id][name] = value
 
     return gpu_metrics_dict
 
 
 class DCGMMetricCollector(object):
-    def __init__(self, gpu_id: int, gpu_instance_id=None, dcgm_url='http://0.0.0.0:9400/metrics'):
-        self.gpu_id = gpu_id
-        self.gpu_instance_id = gpu_instance_id
+    def __init__(self, dcgm_url='http://0.0.0.0:9400/metrics'):
         self.dcgm_url = dcgm_url
 
         self._thread = Thread(target=self.runner)
@@ -49,10 +46,9 @@ class DCGMMetricCollector(object):
         while self.is_running:
             metrics = requests.get(self.dcgm_url).text
             data_collected_time = time.time()
-            gpu_metrics_dict = dcgm_gpu_metric_parser(metrics)
-            gpu_metrics = gpu_metrics_dict[(self.gpu_id, self.gpu_instance_id)]
-            gpu_metrics['time'] = data_collected_time
-            self.gpu_metrics_list.append(gpu_metrics)
+            metrics = dcgm_gpu_metric_parser(metrics)
+            metrics['time'] = data_collected_time
+            self.gpu_metrics_list.append(metrics)
             time.sleep(1)
 
     def start(self):
@@ -65,7 +61,7 @@ class DCGMMetricCollector(object):
 
 
 if __name__ == '__main__':
-    collector = DCGMMetricCollector(gpu_id=0, gpu_instance_id=1)
+    collector = DCGMMetricCollector()
     collector.start()
     time.sleep(3)
     collector.stop()
