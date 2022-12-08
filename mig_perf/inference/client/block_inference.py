@@ -162,7 +162,10 @@ if __name__ == '__main__':
 
     save_json_file_name = Path(
         args_.database_name) / (
-                                  '_'.join([metrics["model_name"], f'bs{metrics["batch_size"]}']) +
+                                  '_'.join([
+                                      metrics['gpu_model_name'].replace(' ', '-'),
+                                      metrics["model_name"], f'bs{metrics["batch_size"]}'
+                                  ]) +
                                   f'_{metrics["test_time"]}.json'
                           )
     save_json_file_name.parent.mkdir(exist_ok=True)
