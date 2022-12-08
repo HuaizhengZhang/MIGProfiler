@@ -11,7 +11,7 @@ export PYTHONPATH="${PWD}"
 # iterate through batch size list
 for batch_size in "${BATCH_SIZES[@]}"; do
     echo "Batch size ${batch_size}"
-    python client/block_inference.py -b "${batch_size}" -m "${MODEL_NAME}" -n "${NUM_TEST_BATCHES}" --device-id "${GPU_ID}" -dbn "${EXP_SAVE_DIR}"
+    python client/block_inference.py -b "${batch_size}" -m "${MODEL_NAME}" -n "${NUM_TEST_BATCHES}" --device-id "${GPU_ID}" -dbn "${EXP_SAVE_DIR}/batch_size"
 
     sleep 10
 done
