@@ -129,6 +129,13 @@ def process_result(args):
             'gpu_instance_profile': gpu_labels.get('GPU_I_PROFILE', None),
         },
     }
+    # if MIG is enabled, also obtain sibling GPU instance profile
+    if config['mig']['enabled']:
+        gpu_instance_profiles = [config['mig']['gpu_instance_profile']]
+        for k, v in gpu_metrics_dict.items():
+            if k[0] == args.gpu_id and k[1] != args.gpu_instance_id:
+                gpu_instance_profiles.append(v['labels'][0]['GPU_I_PROFILE'])
+        config['mig']['gpu_instance_profiles'] = gpu_instance_profiles
     result['gpu_model_name'] = config['gpu_static_profile']['modelName']
     result['config'] = config
     return result
