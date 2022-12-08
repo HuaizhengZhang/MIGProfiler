@@ -179,7 +179,7 @@ def process_result(args):
         'latency', 'client_server_rtt',  # 'batching_time',
         'inference_time', 'postprocessing_time'
     ]
-    if args.preprocessing:
+    if not args.preprocessing:
         timing_metric_names.append('preprocessing_time')
     timing_metric_raw_result_dict = defaultdict(list)
     timing_metric_aggr_result_dict = dict()
