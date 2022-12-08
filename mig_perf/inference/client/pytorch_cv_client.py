@@ -54,7 +54,6 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from copy import deepcopy
 from datetime import datetime
 from pathlib import Path
-from threading import Thread
 
 import numpy as np
 import requests
@@ -100,6 +99,8 @@ def get_args():
         '-gi', '--gpu-instance-id', type=int, default=None,
         help='GPU Instance ID. Specified when MIG is enabled.'
     )
+    # experiment settings
+    parser.add_argument('--dry-run', action='store_true', help='Dry running the experiment without save result.')
     return parser.parse_args()
 
 
@@ -217,7 +218,7 @@ def process_result(args):
     print(f'Failing test number: {fail_count}')
 
     result = {
-        'test_time': str(datetime.now()), 'start_time': start_time,
+        'test_time': datetime.now().strftime('%Y-%m-%d_%H-%M-%S'), 'start_time': start_time,
         'arrival_rate': args.rate, 'testing_time': args.time,
         'batch_size': args.bs, 'time_list': send_time_list,
         'model_name': args.model, 'task': args.task,
@@ -235,7 +236,7 @@ def process_result(args):
     #     'GPU_I_PROFILE': '4g.24gb', 'GPU_I_ID': '0',
     # }
     gpu_labels: dict = gpu_metrics_dict[args.gpu_id, args.gpu_instance_id].pop('labels')[0]
-    result['metrics'] = gpu_metrics_dict
+    result['metrics'] = gpu_metrics_dict[args.gpu_id, args.gpu_instance_id]
 
     # export config
     config = {
@@ -269,9 +270,18 @@ if __name__ == '__main__':
 
     metrics = process_result(args_)
     dcgm_metrics_collector.stop()
-    print(metrics)
     # save the experiment records to the database and print to the console.
     # TODO: note that you need to change doc_name
     # Printer.add_record_to_database(metrics, db_name='ml_cloud_autoscaler',
     #                                address="mongodb://mongodb.withcap.org:27127/",
     #                                doc_name=args.database_name)
+    # temp save to json TODO: manual upload to a DB
+    if args_.dry_run:
+        print('Dry running, result will not dumped')
+        exit(0)
+
+    save_json_file_name = Path(args_.database_name) / f'{metrics["test_time"]}.json'
+    save_json_file_name.parent.mkdir(exist_ok=True)
+    with open(save_json_file_name, 'w') as f:
+        json.dump(metrics, f)
+        print(f'result saved successfully as {save_json_file_name}')

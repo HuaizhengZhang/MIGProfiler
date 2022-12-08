@@ -8,11 +8,9 @@ RESTful Endpoints.
 """
 import asyncio
 import os
-import pickle
 import time
 from functools import partial
 
-import numpy as np
 import sanic.response as res
 from sanic import Sanic
 from sanic.request import Request
@@ -74,7 +72,9 @@ class HttpServer(Sanic):
             'model_name': MODEL_NAME,
             'task': TASK,
             'server_preprocessing': SERVER_PREPROCESSING,
-            'model_runner': None
+            'max_batch_size': MAX_BATCH_SIZE,
+            'max_wait_time': MAX_WAIT_TIME,
+            'model_runner': None,
         }
         super().__init__(name=name, ctx=ctx)
 
@@ -93,7 +93,8 @@ class HttpServer(Sanic):
     async def load_init_replicas(self):
         # TODO: get the batching configuration here.
         self.ctx['model_runner'] = ModelRunner(
-            model_name=self.ctx['model_name'], task=self.ctx['task'], device=f'cuda',
+            model_name=self.ctx['model_name'], task=self.ctx['task'], device='cuda',
+            max_batch_size=self.ctx['max_batch_size'], max_wait=self.ctx['max_wait_time'],
             server_preprocessing=self.ctx['server_preprocessing'], loop=asyncio.get_event_loop(),
         )
 
@@ -111,6 +112,8 @@ if __name__ == '__main__':
     TASK = os.getenv('TASK')
     DEVICE_ID = os.getenv('DEVICE_ID')
     PORT = int(os.getenv('PORT', '50075'))
+    MAX_BATCH_SIZE = int(os.getenv('MAX_BATCH_SIZE', '1'))
+    MAX_WAIT_TIME = float(os.getenv('MAX_WAIT_TIME', '0.1'))
     SERVER_PREPROCESSING = os.getenv('SERVER_PREPROCESSING', '0').upper() in ['1', 'TRUE', 'Y', 'YES']
 
     # Mask out other cuda devices
