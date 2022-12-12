@@ -1,8 +1,14 @@
+import re
+import json
 import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
 
-from figure.util import set_style, set_size, WIDTH, COLOR_LIST
+from util import set_style, set_size, WIDTH, COLOR_LIST
+
+def load_json(file_name, key):
+    with open(file_name) as f:
+        return dict(json.load(f))[key]
 
 
 # EXP 3.1
@@ -290,10 +296,7 @@ def bert_train_bs_profile_qps():
 # EXP 1.2 (A30)
 def bert_train_bs_profile_latency():
     labels = [1, 2, 4, 8, 16, 32]
-    data_1g_6gb = [6.93, 11.97
-19.67
-38.56
-74.1]
+    data_1g_6gb = [6.93, 11.97, 19.67, 38.56, 74.1]
     data_2g_12gb = [47, 40.17, 29.32, 19.51, 11.77, 6.58]
     data_4g_24gb = [76.13, 67.65, 49.45, 32, 18.85, 10.62]
 
@@ -321,9 +324,150 @@ def bert_train_bs_profile_latency():
     plt.savefig(f'./exp1_qps_bert_bs_profile.pdf', format='pdf', bbox_inches='tight')
 
 
+# NEW EXP 1.2 (A30)
+def mps_latency():
+    labels = [1, 2, 4, 8, 16, 32, 64]
+    mps_list, mps_std_list = [], []
+    mig_list, mig_std_list = [], []
+    
+    for bs in labels:
+        # mps_std_list.append(1000 * load_json(f'../data/mps/batch_size_2/NVIDIA-A30_resnet18_bs{bs}.json', 'latency_std'))
+        # mig_std_list.append(1000 * load_json(f'../data/mig/batch_size_2_2/NVIDIA-A30_resnet18_bs{bs}.json', 'latency_std'))
+
+        # mps_list.append(1000 * load_json(f'../data/mps/batch_size_2/NVIDIA-A30_resnet18_bs{bs}.json', 'latency_mean'))
+        # mig_list.append(1000 * load_json(f'../data/mig/batch_size_2_2/NVIDIA-A30_resnet18_bs{bs}.json', 'latency_mean'))
+
+        mps_std_list.append(1000 * load_json(f'../data/mps/batch_size_4/NVIDIA-A30_resnet18_bs{bs}.json', 'latency_std'))
+        mig_std_list.append(1000 * load_json(f'../data/mig/batch_size_4_1/NVIDIA-A30_resnet18_bs{bs}.json', 'latency_std'))
+
+        mps_list.append(1000 * load_json(f'../data/mps/batch_size_4/NVIDIA-A30_resnet18_bs{bs}.json', 'latency_mean'))
+        mig_list.append(1000 * load_json(f'../data/mig/batch_size_4_1/NVIDIA-A30_resnet18_bs{bs}.json', 'latency_mean'))
+        
+
+    index = np.arange(len(labels))
+    fig, ax = plt.subplots(1, 1, figsize=set_size(WIDTH))
+
+    line_width = 3
+    ax.errorbar(index, mig_list, color=COLOR_LIST[0], yerr=mig_std_list, ms=10, linewidth=line_width, marker=".", label='MIG (2 instances)')
+    ax.errorbar(index, mps_list, color=COLOR_LIST[1], yerr=mps_std_list, ms=10, linewidth=line_width, marker=".", label='MPS (2 processes)')
+
+    ax.set_xticks(index, labels=labels)
+
+    plt.margins(x=0.08)
+    ax.set_ylabel('Latency (ms)', fontsize=20)
+    ax.set_xlabel('Batch Size', fontsize=20)
+    # ax.set_ylim([0, 110])
+
+    ax.tick_params(axis='y', rotation=90)
+    ax.legend(loc='upper left', fontsize=20)
+
+    plt.savefig(f'./set2_a30_mig_mps_resnet18_bs_latency.pdf', format='pdf', bbox_inches='tight')
+
+
+# NEW EXP 2.1 (A30)
+def mps_latency_kde():
+    latency_mps = [1000 * x for x in load_json(f'../data/mps/batch_size_4/NVIDIA-A30_resnet18_bs64.json', 'latency')]
+    latency_mig = [1000 * x for x in load_json(f'../data/mig/batch_size_4_1/NVIDIA-A30_resnet18_bs64.json', 'latency')]
+    fig, ax = plt.subplots(1, 1)
+
+    sns.kdeplot(latency_mps, shade=True, label='MPS (4 processes)', color='green')
+    sns.kdeplot(latency_mig, shade=True, label='MIG (4 * 1g.6gb)', color='#005fd4')
+
+    # ax.set_xlim([0, 250])
+    # ax.set_ylim([0, 0.2])
+    ax.set_xlabel('Latency (ms)', fontsize=20)
+    ax.set_ylabel('Kernel Density Estimation (KDE)', fontsize=20)
+    ax.legend(loc='upper right', fontsize=18)
+    # plt.title(f"Latency KDE of XXX", fontsize=10)
+    plt.savefig(f'./set2_a30_mig_mps_resnet18_bs_latency_kde.pdf', format='pdf', bbox_inches='tight')
+
+
+# NEW EXP 2.2 (A30)
+def mps_latency_cdf():
+    kwargs = {'cumulative': True, 'linewidth': 2.0}
+
+    latency_mps = [1000 * x for x in load_json(f'../data/mps/batch_size_4/NVIDIA-A30_resnet18_bs64.json', 'latency')]
+    latency_mig = [1000 * x for x in load_json(f'../data/mig/batch_size_4_1/NVIDIA-A30_resnet18_bs64.json', 'latency')]
+    fig, ax = plt.subplots(1, 1)
+
+    sns.distplot(latency_mps, hist=False, hist_kws=kwargs, kde_kws=kwargs, label='MPS (4 processes)', color='green')
+    sns.distplot(latency_mig, hist=False, hist_kws=kwargs, kde_kws=kwargs, label='MIG (4 * 1g.6gb)', color='#005fd4')
+
+    # ax.set_xlim([0, 250])
+    # ax.set_ylim([0, 0.2])
+    ax.set_xlabel('Latency (ms)', fontsize=20)
+    ax.set_ylabel('CDF', fontsize=20)
+    ax.legend(loc='lower right', fontsize=18)
+    # plt.title(f"Latency KDE of XXX", fontsize=10)
+    plt.savefig(f'./set2_a30_mig_mps_resnet18_bs_latency_cdf.pdf', format='pdf', bbox_inches='tight')
+
+
+# NEW EXP 2.3 (A30)
+def mps_bs_tail_latency():
+    labels = [1, 2, 4, 8, 16, 32, 64]
+    mig_list, mps_list = [], []
+
+    for bs in labels: 
+        mps_list.append(1000 * load_json(f'../data/mps/batch_size_4/NVIDIA-A30_resnet18_bs{bs}.json', 'latency_p99'))
+        mig_list.append(1000 * load_json(f'../data/mig/batch_size_4_1/NVIDIA-A30_resnet18_bs{bs}.json', 'latency_p99'))
+
+    index = np.arange(len(labels))
+    fig, ax = plt.subplots(1, 1, figsize=set_size(WIDTH))
+
+    bar_width = 0.4
+    ax.bar(index - bar_width / 2, mig_list, label='MIG (4-instance)', color=COLOR_LIST[4], width=bar_width)
+    ax.bar(index + bar_width / 2, mps_list, label='MPS (4-process)', color=COLOR_LIST[5], width=bar_width)
+    ax.set_xticks(index, labels=labels)
+
+    # plt.yscale('symlog')
+    plt.margins(x=0.08)
+    ax.set_ylabel('99th Latency Percentile (ms)', fontsize=20)
+
+    ax.tick_params(axis='y', rotation=90)
+    ax.legend(loc='upper left', fontsize=20)
+
+    plt.savefig(f'./exp2_mps_resnet18_bs_a30_4ci.pdf', format='pdf', bbox_inches='tight')
+
+
+# NEW EXP 2.3 (A30)
+def mps_models_tail_latency():
+    labels = ["ResNet18", "ResNet34", "ResNet50", "ResNet101"]
+    mig_list, mps_list = [], []
+
+    mps_list.append(1000 * load_json(f'../data/mps/model_name_4/NVIDIA-A30_resnet18_bs32.json', 'latency_p95'))
+    mps_list.append(1000 * load_json(f'../data/mps/model_name_4/NVIDIA-A30_resnet34_bs32.json', 'latency_p95'))
+    mps_list.append(1000 * load_json(f'../data/mps/model_name_4/NVIDIA-A30_resnet50_bs32.json', 'latency_p95'))
+    mps_list.append(1000 * load_json(f'../data/mps/model_name_4/NVIDIA-A30_resnet101_bs32.json', 'latency_p95'))
+
+    mig_list.append(1000 * load_json(f'../data/mig/model_name_4_1/NVIDIA-A30_resnet18_bs32.json', 'latency_p95'))
+    mig_list.append(1000 * load_json(f'../data/mig/model_name_4_1/NVIDIA-A30_resnet34_bs32.json', 'latency_p95'))
+    mig_list.append(1000 * load_json(f'../data/mig/model_name_4_1/NVIDIA-A30_resnet50_bs32.json', 'latency_p95'))
+    mig_list.append(1000 * load_json(f'../data/mig/model_name_4_1/NVIDIA-A30_resnet101_bs32.json', 'latency_p95'))
+
+    index = np.arange(len(labels))
+    fig, ax = plt.subplots(1, 1, figsize=set_size(WIDTH))
+
+    bar_width = 0.4
+    ax.bar(index - bar_width / 2, mig_list, label='MIG (4-instance)', color=COLOR_LIST[4], width=bar_width)
+    ax.bar(index + bar_width / 2, mps_list, label='MPS (4-process)', color=COLOR_LIST[5], width=bar_width)
+    ax.set_xticks(index, labels=labels)
+
+    # plt.yscale('symlog')
+    plt.margins(x=0.08)
+    ax.set_ylabel('95th Latency Percentile (ms)', fontsize=20)
+
+    ax.tick_params(axis='y', rotation=90)
+    ax.legend(loc='upper left', fontsize=20)
+
+    plt.savefig(f'./exp2_mps_models_bs32_a30_4ci_95latency.pdf', format='pdf', bbox_inches='tight')
+
+
 # Gateway
 if __name__ == "__main__":
     set_style()
 
-    bert_train_seqlen_profile_qps()
-    bert_train_bs_profile_qps()
+    # mps_latency()
+    # mps_latency_cdf()
+    # mps_latency_kde()
+    # mps_models_tail_latency()
+    mps_bs_tail_latency()
