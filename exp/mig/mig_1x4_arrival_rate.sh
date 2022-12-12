@@ -40,19 +40,19 @@ for ARRIVAL_RATE in "${ARRIVAL_RATES[@]}"; do
   sleep 5
 
   echo 'Start profiling client 1'
-  python client/pytorch_cv_client.py --url 'http://localhost:50076' -r "${ARRIVAL_RATE}" -dbn "${EXP_SAVE_DIR}/arrival_rate_1x4" --report-suffix 'client1' -b "${batch_size}" -t "${TEST_TIME}" -P -m "${MODEL_NAME}" -i "${GPU_ID}" > /dev/null 2>&1 &
+  python client/pytorch_cv_client.py --url 'http://localhost:50076' -r "${ARRIVAL_RATE}" -dbn "${EXP_SAVE_DIR}/arrival_rate_1x4" --report-suffix 'client1' -b "${batch_size}" -t "${TEST_TIME}" -P -m "${MODEL_NAME}" -i "${GPU_ID}" -gi 4 > /dev/null 2>&1 &
   CLIENT1_PID=$!
 
   echo 'Start profiling client 2'
-  python client/pytorch_cv_client.py --url 'http://localhost:50077' -r "${ARRIVAL_RATE}" -dbn "${EXP_SAVE_DIR}/arrival_rate_1x4" --report-suffix 'client2' -b "${batch_size}" -t "${TEST_TIME}" -P -m "${MODEL_NAME}" -i "${GPU_ID}" > /dev/null 2>&1 &
+  python client/pytorch_cv_client.py --url 'http://localhost:50077' -r "${ARRIVAL_RATE}" -dbn "${EXP_SAVE_DIR}/arrival_rate_1x4" --report-suffix 'client2' -b "${batch_size}" -t "${TEST_TIME}" -P -m "${MODEL_NAME}" -i "${GPU_ID}" -gi 5 > /dev/null 2>&1 &
   CLIENT2_PID=$!
 
   echo 'Start profiling client 3'
-  python client/pytorch_cv_client.py --url 'http://localhost:50078' -r "${ARRIVAL_RATE}" -dbn "${EXP_SAVE_DIR}/arrival_rate_1x4" --report-suffix 'client3' -b "${batch_size}" -t "${TEST_TIME}" -P -m "${MODEL_NAME}" -i "${GPU_ID}" > /dev/null 2>&1 &
+  python client/pytorch_cv_client.py --url 'http://localhost:50078' -r "${ARRIVAL_RATE}" -dbn "${EXP_SAVE_DIR}/arrival_rate_1x4" --report-suffix 'client3' -b "${batch_size}" -t "${TEST_TIME}" -P -m "${MODEL_NAME}" -i "${GPU_ID}" -gi 6 > /dev/null 2>&1 &
   CLIENT3_PID=$!
 
   echo 'Start profiling client 0'
-  python client/pytorch_cv_client.py -r "${ARRIVAL_RATE}" -dbn "${EXP_SAVE_DIR}/arrival_rate_1x4" --report-suffix 'client0' -b "${batch_size}" -t "${TEST_TIME}" -P -m "${MODEL_NAME}" -i "${GPU_ID}"
+  python client/pytorch_cv_client.py -r "${ARRIVAL_RATE}" -dbn "${EXP_SAVE_DIR}/arrival_rate_1x4" --report-suffix 'client0' -b "${batch_size}" -t "${TEST_TIME}" -P -m "${MODEL_NAME}" -i "${GPU_ID}" -gi 3
 
   echo 'Wait all client to finish'
   wait $CLIENT1_PID

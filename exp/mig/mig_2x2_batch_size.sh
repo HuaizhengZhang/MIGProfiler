@@ -24,7 +24,7 @@ for BATCH_SIZE in "${BATCH_SIZES[@]}"; do
 
     echo 'Start profiling client 0'
     python client/block_inference.py -b "${BATCH_SIZE}" -m "${MODEL_NAME}" -n "${NUM_TEST_BATCHES}" \
-      --device-id "${GPU_INSTANCE0_UUID}" -i "${GPU_ID}" -gi 1  -dbn "${EXP_SAVE_DIR}/batch_size2+2"
+      --device-id "${GPU_INSTANCE0_UUID}" -i "${GPU_ID}" -gi 1  -dbn "${EXP_SAVE_DIR}/batch_size2x2"
 
     echo 'Cleaning up...'
     kill -9 $CLIENT1_PID
