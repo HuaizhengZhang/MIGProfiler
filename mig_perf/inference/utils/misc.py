@@ -19,3 +19,12 @@ def camelcase_to_snakecase(camel_str):
     """
     s1 = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', camel_str)
     return re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).lower()
+
+
+def consolidate_list_of_dict(l: list, depth=-1):
+    if not isinstance(l[0], dict) or depth == 0:
+        return l
+    d = dict()
+    for k in l[0]:
+        d[k] = consolidate_list_of_dict([dic[k] for dic in l], depth=depth - 1)
+    return d
