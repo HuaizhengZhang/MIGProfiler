@@ -45,7 +45,19 @@ pidof nvidia-cuda-mps-control
 echo quit | nvidia-cuda-mps-control
 ```
 
-## 1. 2 MPS Instance on A30 with different batch size
+## 1. MPS multi-instance on A30 with different batch size
+Run 2 model instances on a shared MPS-enabled GPU.
 ```shell
 bash mps_2_instance_batch_size.sh
+```
+
+Run 4 model instances on a shared MPS-enabled GPU.
+```shell
+bash mps_4_instance_batch_size.sh
+```
+
+## 2. MPS multi-instance on A30 with different model name
+Run 4 model instances on a shared MPS-enabled GPU.
+```shell
+bash mps_4_instance_model_name.sh
 ```

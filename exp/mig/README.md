@@ -39,7 +39,20 @@ sudo nvidia-smi mig -dgi
 sudo nvidia-smi -mig 0
 ```
 
-## 1. 2 MIG GPU instances inference on A30 with different batch size
+## 1. MIG GPU instances offline inference on A30 with different batch size
+
+2 instances
 ```shell
 bash mig_2+2_batch_size.sh
+```
+
+4 instances
+```shell
+bash mig_1+1+1+1_batch_size.sh
+```
+
+## 2. MIG GPU instances offline inference on A30 with different model name
+4 instances
+```shell
+bash mig_1+1+1+1_model_name.sh
 ```

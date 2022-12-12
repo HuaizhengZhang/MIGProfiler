@@ -14,6 +14,7 @@ from prometheus_client.parser import text_string_to_metric_families
 
 
 def dcgm_gpu_metric_parser(metrics: str):
+    # TODO: change GPU Instance ID -> MIG Device ID. GPU Instance ID is not determined by device order
     # gpu_id -> { gpu_instance_id -> metrics }
     # if no gpu instance (MIG not enabled), gpu_instance_id is None
     gpu_metrics_dict = defaultdict(dict)
