@@ -80,14 +80,16 @@ send_time_list = []
 def get_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('-b', '--bs', help='frontend batch size', type=int, required=True)
-    parser.add_argument('-m', '--model', type=str, nargs='+', required=True,
-                        help='A list of names of the used models. For example, resnet18.')
+    parser.add_argument('-m', '--model', type=str, required=True,
+                        help='Name of the used models. For example, resnet18.')
     parser.add_argument('--url', type=str, default='http://localhost:50075',
                         help='The host url of your services. Default to http://localhost:50075.')
     parser.add_argument('-T', '--task', type=str, default='image_classification',
                         help='The service name you are testing. Default to image_classification.')
     parser.add_argument('-dbn', '--database_name', type=str, default='test',
                         help='The database name you record data to. Default to test.')
+    parser.add_argument('--report-suffix', type=str, default='',
+                        help='Suffix to the database name the record data saved.')
     parser.add_argument('-r', '--rate', help='The arrival rate. Default to 5.', type=float, default=5)
     parser.add_argument('-t', '--time', help='The testing duration. Default to 30.', type=float, default=30)
     parser.add_argument('--data', type=str, default=DATA_PATH,
@@ -287,7 +289,14 @@ if __name__ == '__main__':
         print('Dry running, result will not dumped')
         exit(0)
 
-    save_json_file_name = Path(args_.database_name) / f'{metrics["test_time"]}.json'
+    save_json_file_name = Path(args_.database_name) / (
+            '_'.join([
+                metrics['gpu_model_name'].replace(' ', '-'),
+                metrics["model_name"],
+                f'bs{metrics["batch_size"]}',
+                f'rate{metrics["arrival_rate"]}',
+            ]) + (f'_{args_.report_suffix}' if args_.report_suffix else '') + f'.json'
+    )
     save_json_file_name.parent.mkdir(exist_ok=True)
     with open(save_json_file_name, 'w') as f:
         json.dump(metrics, f)
