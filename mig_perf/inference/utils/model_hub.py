@@ -21,7 +21,7 @@ _MODEL_NLP_REPOSITORY = [
 ]
 
 
-def load_pytorch_model(model_name: str, task: str = 'model'):
+def load_pytorch_model(model_name: str, task: str = 'model', **kwargs):
     """
     Load model by model name (and task name).
     Supported model names:
@@ -47,7 +47,7 @@ def load_pytorch_model(model_name: str, task: str = 'model'):
 
     if model_name in _MODEL_CV_REPOSITORY:
         import torchvision
-        return getattr(torchvision.models, model_name)(pretrained=True)
+        return getattr(torchvision.models, model_name)(**kwargs)
     elif model_name in _MODEL_NLP_REPOSITORY:
         from transformers import AutoModelForSequenceClassification
         return AutoModelForSequenceClassification.from_pretrained(model_name)
