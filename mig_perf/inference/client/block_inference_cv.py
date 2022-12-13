@@ -183,7 +183,7 @@ if __name__ == '__main__':
                                   ]) + (f'_{args_.report_suffix}' if args_.report_suffix else '') + '.json'
                                   # f'_{metrics["test_time"]}.json'
                           )
-    save_json_file_name.parent.mkdir(exist_ok=True)
+    save_json_file_name.parent.mkdir(exist_ok=True, parents=True)
     with open(save_json_file_name, 'w') as f:
         json.dump(metrics, f)
         print(f'result saved successfully as {save_json_file_name}')

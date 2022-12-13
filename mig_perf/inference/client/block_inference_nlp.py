@@ -185,7 +185,7 @@ if __name__ == '__main__':
                                       metrics["model_name"], f'bs{metrics["batch_size"]}'
                                   ]) + f'.json'
                           )
-    save_json_file_name.parent.mkdir(exist_ok=True)
+    save_json_file_name.parent.mkdir(exist_ok=True, parents=True)
     with open(save_json_file_name, 'w') as f:
         json.dump(metrics, f)
         print(f'result saved successfully as {save_json_file_name}')
