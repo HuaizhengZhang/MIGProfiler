@@ -16,14 +16,14 @@ export PYTHONPATH="${PWD}"
 for BATCH_SIZE in "${BATCH_SIZES[@]}"; do
     echo "Batch size ${BATCH_SIZE}"
     echo 'Start dummy client 1'
-    python client/block_inference.py --dry-run  -b "${BATCH_SIZE}" -m "${MODEL_NAME}" -n 1048575  \
+    python client/block_inference_cv.py --dry-run  -b "${BATCH_SIZE}" -m "${MODEL_NAME}" -n 1048575  \
       --device-id "${GPU_INSTANCE1_UUID}" -i "${GPU_ID}" -gi 2  > /dev/null 2>&1 &
     CLIENT1_PID=$!
 
     sleep 5
 
     echo 'Start profiling client 0'
-    python client/block_inference.py -b "${BATCH_SIZE}" -m "${MODEL_NAME}" -n "${NUM_TEST_BATCHES}" \
+    python client/block_inference_cv.py -b "${BATCH_SIZE}" -m "${MODEL_NAME}" -n "${NUM_TEST_BATCHES}" \
       --device-id "${GPU_INSTANCE0_UUID}" -i "${GPU_ID}" -gi 1  -dbn "${EXP_SAVE_DIR}/batch_size2x2"
 
     echo 'Cleaning up...'

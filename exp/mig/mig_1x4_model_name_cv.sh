@@ -22,24 +22,24 @@ export PYTHONPATH="${PWD}"
 for MODEL_NAME in "${MODEL_NAMES[@]}"; do
     echo "Batch size ${BATCH_SIZE}"
     echo 'Start dummy client 1'
-    python client/block_inference.py --dry-run  -b "${BATCH_SIZE}" -m "${MODEL_NAME}" -n 1048575  \
+    python client/block_inference_cv.py --dry-run  -b "${BATCH_SIZE}" -m "${MODEL_NAME}" -n 1048575  \
       --device-id "${GPU_INSTANCE1_UUID}" -i "${GPU_ID}" -gi 4  > /dev/null 2>&1 &
     CLIENT1_PID=$!
 
     echo 'Start dummy client 2'
-    python client/block_inference.py --dry-run  -b "${BATCH_SIZE}" -m "${MODEL_NAME}" -n 1048575  \
+    python client/block_inference_cv.py --dry-run  -b "${BATCH_SIZE}" -m "${MODEL_NAME}" -n 1048575  \
       --device-id "${GPU_INSTANCE2_UUID}" -i "${GPU_ID}" -gi 5  > /dev/null 2>&1 &
     CLIENT2_PID=$!
 
     echo 'Start dummy client 3'
-    python client/block_inference.py --dry-run  -b "${BATCH_SIZE}" -m "${MODEL_NAME}" -n 1048575  \
+    python client/block_inference_cv.py --dry-run  -b "${BATCH_SIZE}" -m "${MODEL_NAME}" -n 1048575  \
       --device-id "${GPU_INSTANCE3_UUID}" -i "${GPU_ID}" -gi 6  > /dev/null 2>&1 &
     CLIENT3_PID=$!
 
     sleep 5
 
     echo 'Start profiling client 0'
-    python client/block_inference.py -b "${BATCH_SIZE}" -m "${MODEL_NAME}" -n "${NUM_TEST_BATCHES}" \
+    python client/block_inference_cv.py -b "${BATCH_SIZE}" -m "${MODEL_NAME}" -n "${NUM_TEST_BATCHES}" \
       --device-id "${GPU_INSTANCE0_UUID}" -i "${GPU_ID}" -gi 3  -dbn "${EXP_SAVE_DIR}/model_name1x4"
 
     echo 'Cleaning up...'
