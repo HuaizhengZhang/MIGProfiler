@@ -18,7 +18,7 @@ import torch.cuda
 from tqdm import trange
 
 from client.monitor import DCGMMetricCollector
-from utils.misc import consolidate_list_of_dict
+from utils.misc import consolidate_list_of_dict, get_gpu_device_uuid, get_ids_from_mig_device_id
 from utils.model_hub import load_pytorch_model
 from utils.pipeline_manager import PreProcessor
 
@@ -40,13 +40,12 @@ def get_args():
     parser.add_argument('--data', type=str, default=DATA_PATH,
                         help=f'The path to your testing image. Default to {DATA_PATH}')
     # GPU related arguments
-    parser.add_argument('--device-id', type=str, default='0', help='Device ID to pass for CUDA_VISIBLE_DEVICES.')
     parser.add_argument(
         '-i', '--gpu-id', type=int, default=0,
         help='GPU ID. Default to 0. This is only for record purpose.'
     )
     parser.add_argument(
-        '-gi', '--gpu-instance-id', type=int, default=None,
+        '-mi', '--mig-device-id', type=int, default=None,
         help='GPU Instance ID. Specified when MIG is enabled. This is only for record purpose.'
     )
     # experiment settings
@@ -55,7 +54,12 @@ def get_args():
     parser.add_argument('--report-suffix', type=str, default='', 
                         help='The suffix of the record saving file name')
     parser.add_argument('--dry-run', action='store_true', help='Dry running the experiment without save result.')
-    return parser.parse_args()
+    args = parser.parse_args()
+    args.device_uuid = get_gpu_device_uuid(args.gpu_id, args.mig_device_id)
+    assert args.device_uuid is not None, \
+        f'Cannot find device UUID of GPU ID: {args.gpu_id}, MIG Device ID: {args.mig_device_id}'
+    args.gpu_instance_id, args.compute_instance_id = get_ids_from_mig_device_id(args.gpu_id, args.mig_device_id)
+    return args
 
 
 def warm_up(args):
@@ -120,6 +124,8 @@ def process_result(args):
     # }
     gpu_labels: dict = gpu_metrics_dict[args.gpu_id, args.gpu_instance_id].pop('labels')[0]
     result['metrics'] = gpu_metrics_dict[args.gpu_id, args.gpu_instance_id]
+    # patch GPU metrics back
+    gpu_metrics_dict[args.gpu_id, args.gpu_instance_id]['labels'] = [gpu_labels]
 
     # export config
     config = {
@@ -133,9 +139,9 @@ def process_result(args):
     }
     # if MIG is enabled, also obtain sibling GPU instance profile
     if config['mig']['enabled']:
-        gpu_instance_profiles = [config['mig']['gpu_instance_profile']]
+        gpu_instance_profiles = list()
         for k, v in gpu_metrics_dict.items():
-            if k[0] == args.gpu_id and k[1] != args.gpu_instance_id:
+            if k[0] == args.gpu_id:
                 gpu_instance_profiles.append(v['labels'][0]['GPU_I_PROFILE'])
         config['mig']['gpu_instance_profiles'] = gpu_instance_profiles
     result['gpu_model_name'] = config['gpu_static_profile']['modelName']
@@ -147,7 +153,7 @@ if __name__ == '__main__':
     args_ = get_args()
     # Mask out other cuda devices
     os.environ['CUDA_DEVICE_ORDER'] = "PCI_BUS_ID"
-    os.environ['CUDA_VISIBLE_DEVICES'] = args_.device_id
+    os.environ['CUDA_VISIBLE_DEVICES'] = args_.device_uuid
     dcgm_metrics_collector = DCGMMetricCollector()
 
     print('Testing on:')
