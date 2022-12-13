@@ -6,6 +6,7 @@ Requirements:
 - PyTorch with CUDA
 - OpenCV
 - Sanic
+- Transformers
 
 ```shell
 # create virtual environment
@@ -15,6 +16,7 @@ conda activate mig-perf
 # install required packages
 conda install pytorch torchvision pytorch-cuda=11.6 -c pytorch -c nvidia
 conda install -c conda-forge opencv
+pip install transformers
 pip install sanic tqdm prometheus_client
 ```
 

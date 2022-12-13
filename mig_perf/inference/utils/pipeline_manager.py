@@ -13,6 +13,7 @@ import numpy as np
 import torch.hub
 from PIL import Image
 from torchvision import transforms
+from transformers import AutoTokenizer
 
 from .misc import camelcase_to_snakecase
 
@@ -36,14 +37,14 @@ class PreProcessor(object):
     ])
 
     @staticmethod
-    def get_preprocessor(task: str, model_name: str = None):
+    def get_preprocessor(task: str, model_name: str = None, **kwargs):
         """
         processing data here.
         """
         if task == 'image_classification':
             return PreProcessor.transform_image2torch
         elif task == 'sequence_classification':
-            return PreProcessor.sequence_classification_preprocessor_factory(model_name)
+            return PreProcessor.sequence_classification_preprocessor_factory(model_name, **kwargs)
         else:
             return PreProcessor.default_preprocessor
 
@@ -66,19 +67,11 @@ class PreProcessor(object):
         return torch.stack([cls._image_transform(image) for image in images], dim=0)
 
     @classmethod
-    def sequence_classification_preprocessor_factory(cls, model_name):
+    def sequence_classification_preprocessor_factory(cls, model_name, **kwargs):
         tokenizer = cls._tokenizer_dict.get(model_name, None)
         if tokenizer is None:
-            tokenizer = torch.hub.load('huggingface/pytorch-transformers', 'tokenizer', model_name)
-        return lambda input_bytes_list: cls.sequence_classification_preprocessor(input_bytes_list, tokenizer)
-
-    @staticmethod
-    def sequence_classification_preprocessor(input_bytes_list, tokenizer):
-        batch = []
-        for str_bytes in input_bytes_list:
-            batch.append(str_bytes[0].decode())  # disabled client batching
-        return tokenizer.batch_encode_plus(batch, pad_to_max_length=True).convert_to_tensors(tensor_type="pt")[
-            'input_ids']
+            tokenizer = AutoTokenizer.from_pretrained(model_name)
+        return lambda input_str_list: tokenizer(input_str_list, return_tensors='pt', **kwargs)['input_ids']
 
 
 class PostProcessor(object):

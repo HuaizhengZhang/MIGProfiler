@@ -49,6 +49,7 @@ def load_pytorch_model(model_name: str, task: str = 'model'):
         import torchvision
         return getattr(torchvision.models, model_name)(pretrained=True)
     elif model_name in _MODEL_NLP_REPOSITORY:
-        return torch.hub.load('huggingface/pytorch-transformers', task, model_name)
+        from transformers import AutoModelForSequenceClassification
+        return AutoModelForSequenceClassification.from_pretrained(model_name)
     else:
         raise ValueError(f'model name={model_name} not supported.')
