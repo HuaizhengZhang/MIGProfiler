@@ -20,7 +20,7 @@ docker ps
 for BATCH_SIZE in "${BATCH_SIZES[@]}"; do
   echo "Batch size ${BATCH_SIZE}"
   echo 'Start profiling client 0'
-  python client/block_inference.py -b "${BATCH_SIZE}" -m "${MODEL_NAME}" -n "${NUM_TEST_BATCHES}" \
+  python client/block_inference_cv.py -b "${BATCH_SIZE}" -m "${MODEL_NAME}" -n "${NUM_TEST_BATCHES}" \
     -i "${GPU_ID}" -dbn "${EXP_SAVE_DIR}/batch_size/no_mig"
 
   echo 'Finish!'

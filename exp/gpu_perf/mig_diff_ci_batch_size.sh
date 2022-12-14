@@ -48,3 +48,4 @@ for CI in "${CIS[@]}"; do
   sudo nvidia-smi -i "${GPU_ID}" -mig 0
 
   sleep 10
+done

@@ -35,7 +35,7 @@ def get_args():
     parser.add_argument('-b', '--bs', help='frontend batch size', type=int, required=True)
     parser.add_argument('-m', '--model', type=str, required=True,
                         help='Name of the used models. For example, bert-base-cased.')
-    parser.add_argument('-T', '--task', type=str, default='sequence_classification',
+    parser.add_argument('-T', '--task', type=str, default='single_label_classification',
                         help='The service name you are testing. Default to image_classification.')
     parser.add_argument('-n', '--num_batches', type=int, required=True, help='Total number of batches to test.')
     parser.add_argument('--data', type=str, default=TEXT_DATA,
@@ -164,7 +164,7 @@ if __name__ == '__main__':
     print(f'batch size: {args_.bs};', f'model name: {args_.model}')
 
     print(f'Load {args_.model} model...')
-    model = load_pytorch_model(model_name=args_.model).cuda()
+    model = load_pytorch_model(model_name=args_.model, task=args_.task).cuda()
     print('Warming up...')
     warm_up(args_)
     print('Testing...')

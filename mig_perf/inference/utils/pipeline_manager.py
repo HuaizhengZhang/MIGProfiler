@@ -43,7 +43,7 @@ class PreProcessor(object):
         """
         if task == 'image_classification':
             return PreProcessor.transform_image2torch
-        elif task == 'sequence_classification':
+        elif task == 'single_label_classification':
             return PreProcessor.sequence_classification_preprocessor_factory(model_name, **kwargs)
         else:
             return PreProcessor.default_preprocessor
