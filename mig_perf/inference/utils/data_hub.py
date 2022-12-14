@@ -67,14 +67,26 @@ def _collate_fn(x, tokenizer, seq_length):
     return ret
 
 
-def load_amazaon_review_data(model_name, seq_length, batch_size, num_workers=4):
+def load_amazaon_review_data(batch_size, max_seq_len, tokenizer, num_workers=os.cpu_count()):
     from datasets import load_dataset
 
-    model_name = model_names[model_name]
     # prepare test data
     tokenizer = AutoTokenizer.from_pretrained(model_name)
-    test_data, _ = load_dataset("amazon_reviews_multi", "all_languages", split=['train', 'test'])
-    dataloader = DataLoader(test_data, batch_size=batch_size,
-                            collate_fn=lambda x: _collate_fn(x, tokenizer, seq_length),
-                            num_workers=num_workers)
-    return dataloader
+    train_dataset, val_dataset = load_dataset("amazon_reviews_multi", "all_languages", split=['train', 'test'])
+    tokenize_func = partial(
+        tokenizer,
+        padding=False,
+        truncation=True,
+        max_length=max_seq_len,
+    )
+    train_dataloader = DataLoader(
+        train_dataset, batch_size=batch_size,
+        collate_fn=tokenize_func,
+        num_workers=num_workers,
+    )
+    val_dataloader = DataLoader(
+        val_dataset, batch_size=batch_size,
+        collate_fn=tokenize_func,
+        num_workers=num_workers,
+    )
+    return train_dataloader, val_dataloader
