@@ -1,11 +1,12 @@
 import jax
 import jax.numpy as np
-from jax.experimental import stax
-from jax.experimental.stax import Dense, Relu, LogSoftmax
+from jax.example_libraries import stax
+from jax.example_libraries.stax import Dense, Relu, LogSoftmax
+from jaxlib.xla_extension import Device
 
 # Use the GPU device if available
 if jax.host_id() == 0:
-    jax.devices()[1].use()
+    print(jax.devices()[0])
 
 # Load the pre-trained JAX ResNet50 model
 _, params = stax.serial(
