@@ -48,22 +48,23 @@ Notes:
 """
 import argparse
 import json
-import pickle
 import time
 from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from copy import deepcopy
 from datetime import datetime
 from pathlib import Path
-from threading import Thread
 
 import numpy as np
 import requests
-# from tqdm import tqdm
+from tqdm import tqdm
 
-from utils.dtype import type_to_data_type, serialize_byte_tensor, DataType
+from client.monitor import DCGMMetricCollector
+from generator import WorkloadGenerator
+from utils.misc import consolidate_list_of_dict
+from utils.request import make_restful_request_from_numpy
 # from utils.logger import Printer
 from utils.pipeline_manager import PreProcessor
-# from workload.generator import WorkloadGenerator
 
 DATA_PATH = str(Path(__file__).parent / 'n02124075_Egyptian_cat.jpg')
 SEED = 666
@@ -72,7 +73,6 @@ request_num = 0
 
 results = set()
 
-latency_list = []
 send_time_list = []
 
 
@@ -80,19 +80,29 @@ send_time_list = []
 def get_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('-b', '--bs', help='frontend batch size', type=int, required=True)
-    parser.add_argument('-m', '--model', type=str, nargs='+', required=True,
-                        help='A list of names of the used models. For example, resnet18.')
+    parser.add_argument('-m', '--model', type=str, required=True,
+                        help='Name of the used models. For example, resnet18.')
     parser.add_argument('--url', type=str, default='http://localhost:50075',
                         help='The host url of your services. Default to http://localhost:50075.')
-    parser.add_argument('-n', '--name', type=str, default='image_classification',
+    parser.add_argument('-T', '--task', type=str, default='image_classification',
                         help='The service name you are testing. Default to image_classification.')
     parser.add_argument('-dbn', '--database_name', type=str, default='test',
                         help='The database name you record data to. Default to test.')
+    parser.add_argument('--report-suffix', type=str, default='',
+                        help='Suffix to the database name the record data saved.')
     parser.add_argument('-r', '--rate', help='The arrival rate. Default to 5.', type=float, default=5)
     parser.add_argument('-t', '--time', help='The testing duration. Default to 30.', type=float, default=30)
     parser.add_argument('--data', type=str, default=DATA_PATH,
                         help=f'The path to your testing image. Default to {DATA_PATH}')
     parser.add_argument('-P', '--preprocessing', action='store_true', help='Use client preprocessing.')
+    # GPU related arguments
+    parser.add_argument('-i', '--gpu-id', type=int, default=0, help='GPU ID. Default to 0.')
+    parser.add_argument(
+        '-gi', '--gpu-instance-id', type=int, default=None,
+        help='GPU Instance ID. Specified when MIG is enabled.'
+    )
+    # experiment settings
+    parser.add_argument('--dry-run', action='store_true', help='Dry running the experiment without save result.')
     return parser.parse_args()
 
 
@@ -111,70 +121,7 @@ def sender(url, request):
         'latency': latency,
         'client_server_rtt': client_server_rtt,
     })
-    latency_list.append(latency)
     return result
-
-
-def make_restful_request_from_numpy(input_tensor: np.ndarray):
-    """Make the RESTful request here.
-
-    Args:
-        input_tensor (numpy.ndarray): The input tensor in numpy array format.
-    """
-
-    if not isinstance(input_tensor, (np.ndarray,)):
-        raise ValueError('input_tensor must be a numpy array')
-    datatype = type_to_data_type(input_tensor.dtype)
-
-    content = {
-        'shape': list(input_tensor.shape),
-        'datatype': datatype.name
-    }
-
-    if datatype == DataType.TYPE_BYTES:
-        content['raw_input_contents'] = serialize_byte_tensor(input_tensor).tobytes()
-    else:
-        content['raw_input_contents'] = input_tensor.tobytes()
-
-    files = {'content': pickle.dumps(content)}
-
-    return {'files': files}
-
-
-def metric_collector(args):
-    """Collect all metrics information from Redis."""
-    while is_running:
-        time.sleep(1)
-        for model_name in args.model:
-            aggr_stat_data = redis_client.hget(MONITOR_AGGREGATION_KEY, model_name)
-            data_collected_time = time.time()
-            if aggr_stat_data is not None:
-                aggr_stat = AggregationStat()
-                aggr_stat.ParseFromString(aggr_stat_data)
-                for metric_name, value in json_format.MessageToDict(aggr_stat).items():
-                    aggr_metric_result_dict[metric_name].append(value)
-                aggr_metric_result_dict['time'].append(data_collected_time - start_time)
-
-        # { ip: metric_protobuf }
-        stat_data_dict = redis_client.hgetall(MONITOR_STAT_KEY)
-        data_collected_time = time.time()
-        # { metric_name: { ip: ... } }
-        stat_dict = defaultdict(dict)
-        for ip_bytes, stat_data in stat_data_dict.items():
-            ip = ip_bytes.decode()
-            stat = SysStat()
-            stat.ParseFromString(stat_data)
-
-            # remove unwanted metrics
-            stat = json_format.MessageToDict(stat)
-            del stat['ip']
-            del stat['gpuCount']
-            for metric_name, value in stat.items():
-                stat_dict[metric_name][ip.replace('.', '[dot]')] = value
-
-        for metric_name, value in stat_dict.items():
-            metric_result_dict[metric_name].append(value)
-        metric_result_dict['time'].append(data_collected_time - start_time)
 
 
 def warm_up(args):
@@ -205,7 +152,7 @@ def send_stress_test_data(args):
 
     arrival_rate = args.rate
     duration = args.time
-    url = f'{args.url}/predict/{args.name}'
+    url = f'{args.url}/predict'
     with open(args.data, 'rb') as f:
         image = f.read()
     image_np = np.frombuffer(image, dtype=np.uint8)
@@ -222,7 +169,6 @@ def send_stress_test_data(args):
     print(f'Generating {request_num} exadmples')
 
     start_time = time.time()
-    metric_collector_thread.start()
 
     with ThreadPoolExecutor(10) as executor:
         for arrive_time in tqdm(send_time_list[:request_num]):
@@ -232,10 +178,10 @@ def send_stress_test_data(args):
 
 def process_result(args):
     timing_metric_names = [
-        'latency', 'client_server_rtt', # 'batching_time',
+        'latency', 'client_server_rtt',  # 'batching_time',
         'inference_time', 'postprocessing_time'
     ]
-    if args.preprocessing:
+    if not args.preprocessing:
         timing_metric_names.append('preprocessing_time')
     timing_metric_raw_result_dict = defaultdict(list)
     timing_metric_aggr_result_dict = dict()
@@ -249,7 +195,7 @@ def process_result(args):
             fail_count += 1
             print('.', end='')
             if fail_count % 20 == 0:
-                print()
+                print(fail_count)
 
     finish_time = time.time()
 
@@ -273,45 +219,52 @@ def process_result(args):
     # report
     print(f'Failing test number: {fail_count}')
 
-    device_dict = dict()
-    for url, init_replica_config_dict in config.frontend.replicas.items():
-        ip = url.host
-        devices = set()
-        for init_replica_configs in init_replica_config_dict.values():
-            devices.update([replica_config.device for replica_config in init_replica_configs])
-        device_dict[ip] = list(devices)
-
     result = {
-        'test_time': str(datetime.now()),
+        'test_time': datetime.now().strftime('%Y-%m-%d_%H-%M-%S'), 'start_time': start_time,
         'arrival_rate': args.rate, 'testing_time': args.time,
-        'batch_size': args.bs, 'latency_list': latency_list, 'time_list': send_time_list,
-        'default_model': args.model, 'service_name': args.name,
-        'load_balancer': config.frontend.load_balancer,
+        'batch_size': args.bs, 'time_list': send_time_list,
+        'model_name': args.model, 'task': args.task,
         'fail_count': fail_count, 'qps': request_num / (finish_time - start_time),
-        'devices': json.dumps(device_dict), 'servers': list(device_dict.keys()),
-        'client_preprocessing': args.preprocessing, 'config': config.export_json()
+        'client_preprocessing': args.preprocessing,
     }
 
     result.update(timing_metric_raw_result_dict)
     result.update(timing_metric_aggr_result_dict)
-    result['metrics'] = metric_result_dict
-    result['aggr_metrics'] = aggr_metric_result_dict
+    gpu_metrics_list = deepcopy(dcgm_metrics_collector.gpu_metrics_list)
+    gpu_metrics_dict = consolidate_list_of_dict(gpu_metrics_list, depth=2)
+    # gpu_label_example = {
+    #     'gpu': '0', 'UUID': 'GPU-bd8c3d28-4b3e-e4ad-650a-4c5a3692b72f', 'device': 'nvidia0',
+    #     'modelName': 'NVIDIA A30', 'Hostname': '2e140b568f0c',
+    #     'GPU_I_PROFILE': '4g.24gb', 'GPU_I_ID': '0',
+    # }
+    gpu_labels: dict = gpu_metrics_dict[args.gpu_id, args.gpu_instance_id].pop('labels')[0]
+    result['metrics'] = gpu_metrics_dict[args.gpu_id, args.gpu_instance_id]
 
-    # save the experiment records to the database and print to the console.
-    # TODO: change the database settings to the configuration file.
-    # TODO: note that you need to change doc_name
-    Printer.add_record_to_database(result, db_name='ml_cloud_autoscaler',
-                                   address="mongodb://mongodb.withcap.org:27127/",
-                                   doc_name=args.database_name)
+    # export config
+    config = {
+        'client_args': vars(args),
+        'gpu_static_profile': gpu_labels,
+        'mig': {
+            'enabled': gpu_labels.get('GPU_I_ID', None) is not None,
+            'gpu_instance_id': gpu_labels.get('GPU_I_ID', None),
+            'gpu_instance_profile': gpu_labels.get('GPU_I_PROFILE', None),
+        },
+    }
+    # if MIG is enabled, also obtain sibling GPU instance profile
+    if config['mig']['enabled']:
+        gpu_instance_profiles = [config['mig']['gpu_instance_profile']]
+        for k, v in gpu_metrics_dict.items():
+            if k[0] == args.gpu_id and k[1] != args.gpu_instance_id:
+                gpu_instance_profiles.append(v['labels'][0]['GPU_I_PROFILE'])
+        config['mig']['gpu_instance_profiles'] = gpu_instance_profiles
+    result['gpu_model_name'] = config['gpu_static_profile']['modelName']
+    result['config'] = config
+    return result
 
 
 if __name__ == '__main__':
     args_ = get_args()
-    # redis_client = RedisClient()
-    metric_result_dict = defaultdict(list)
-    aggr_metric_result_dict = defaultdict(list)
-    metric_collector_thread = Thread(target=metric_collector, args=(args_,))
-    # is_running = True
+    dcgm_metrics_collector = DCGMMetricCollector()
 
     print('Testing on:')
     print(f'arrival rate: {args_.rate};', f'testing time: {args_.time};')
@@ -320,10 +273,31 @@ if __name__ == '__main__':
     print('Warming up...')
     warm_up(args_)
     print('Testing...')
-    # send_stress_test_data(args_)
+    dcgm_metrics_collector.start()
+    send_stress_test_data(args_)
     print('Finish')
-    is_running = False  # noqa
-    # metric_collector_thread.join()
 
-    # process_result(args_)
-    # redis_client.close()
+    metrics = process_result(args_)
+    dcgm_metrics_collector.stop()
+    # save the experiment records to the database and print to the console.
+    # TODO: note that you need to change doc_name
+    # Printer.add_record_to_database(metrics, db_name='ml_cloud_autoscaler',
+    #                                address="mongodb://mongodb.withcap.org:27127/",
+    #                                doc_name=args.database_name)
+    # temp save to json TODO: manual upload to a DB
+    if args_.dry_run:
+        print('Dry running, result will not dumped')
+        exit(0)
+
+    save_json_file_name = Path(args_.database_name) / (
+            '_'.join([
+                metrics['gpu_model_name'].replace(' ', '-'),
+                metrics["model_name"],
+                f'bs{metrics["batch_size"]}',
+                f'rate{metrics["arrival_rate"]}',
+            ]) + (f'_{args_.report_suffix}' if args_.report_suffix else '') + f'.json'
+    )
+    save_json_file_name.parent.mkdir(exist_ok=True)
+    with open(save_json_file_name, 'w') as f:
+        json.dump(metrics, f)
+        print(f'result saved successfully as {save_json_file_name}')
