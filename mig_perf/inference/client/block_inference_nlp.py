@@ -18,12 +18,13 @@ import torch.cuda
 from tqdm import trange
 
 from client.monitor import DCGMMetricCollector
-from utils.misc import consolidate_list_of_dict
+from utils.misc import consolidate_list_of_dict, get_gpu_device_uuid, get_ids_from_mig_device_id
 from utils.model_hub import load_pytorch_model
 from utils.pipeline_manager import PreProcessor
 
-DATA_PATH = str(Path(__file__).parent / 'n02124075_Egyptian_cat.jpg')
-
+TEXT_DATA = 'Material confined likewise it humanity raillery an unpacked as he Three ' \
+            'chief merit no if. Now how her edward engage not horses Oh resolution he ' \
+            'dissimilar precaution to comparison an Matters engaged between'
 latency_list = list()
 start_time = 0
 finish_time = 0
@@ -33,53 +34,61 @@ def get_args():
     parser = argparse.ArgumentParser(description='Blocked model inference')
     parser.add_argument('-b', '--bs', help='frontend batch size', type=int, required=True)
     parser.add_argument('-m', '--model', type=str, required=True,
-                        help='Name of the used models. For example, resnet18.')
-    parser.add_argument('-T', '--task', type=str, default='image_classification',
+                        help='Name of the used models. For example, bert-base-cased.')
+    parser.add_argument('-T', '--task', type=str, default='sequence_classification',
                         help='The service name you are testing. Default to image_classification.')
     parser.add_argument('-n', '--num_batches', type=int, required=True, help='Total number of batches to test.')
-    parser.add_argument('--data', type=str, default=DATA_PATH,
-                        help=f'The path to your testing image. Default to {DATA_PATH}')
+    parser.add_argument('--data', type=str, default=TEXT_DATA,
+                        help=f'The path to your testing image. Default to {TEXT_DATA}')
+    parser.add_argument('--seq_len', type=int, default=64, help='Sequence length of the text to be tested.')
     # GPU related arguments
-    parser.add_argument('--device-id', type=str, default='0', help='Device ID to pass for CUDA_VISIBLE_DEVICES.')
     parser.add_argument(
         '-i', '--gpu-id', type=int, default=0,
         help='GPU ID. Default to 0. This is only for record purpose.'
     )
     parser.add_argument(
-        '-gi', '--gpu-instance-id', type=int, default=None,
-        help='GPU Instance ID. Specified when MIG is enabled. This is only for record purpose.'
+        '-mi', '--mig-device-id', type=int, default=None,
+        help='MIG device ID. Specified when MIG is enabled.'
     )
     # experiment settings
     parser.add_argument('-dbn', '--database_name', type=str, default='test',
                         help='The database name you record data to. Default to test.')
+    parser.add_argument('--report-suffix', type=str, default='',
+                        help='The suffix of the record saving file name')
     parser.add_argument('--dry-run', action='store_true', help='Dry running the experiment without save result.')
-    return parser.parse_args()
+    args = parser.parse_args()
+    args.device_uuid = get_gpu_device_uuid(args.gpu_id, args.mig_device_id)
+    assert args.device_uuid is not None, \
+        f'Cannot find device UUID of GPU ID: {args.gpu_id}, MIG Device ID: {args.mig_device_id}'
+    args.gpu_instance_id, args.compute_instance_id = get_ids_from_mig_device_id(args.gpu_id, args.mig_device_id)
+    return args
 
 
 def warm_up(args):
     """Warm up for 100 batches each pre GPU worker"""
-    with open(args.data, 'rb') as f:
-        image = f.read()
-    image_np = np.frombuffer(image, dtype=np.uint8)
-    image_tensor = PreProcessor.transform_image2torch([image_np] * args.bs).cuda()
+    # Generate text at specific sequence length
+    preporcessor = PreProcessor.get_preprocessor(
+        task=args.task, model_name=args.model, padding="max_length", max_length=args.seq_len
+    )
+    text_tensor = preporcessor([args.data] * args.bs).cuda()
     num = 100
     for _ in range(num):
-        model(image_tensor)
+        model(text_tensor)
     torch.cuda.synchronize()
 
 
 def test_block_inference(args):
     """Run inference test"""
     global start_time, finish_time
-    with open(args.data, 'rb') as f:
-        image = f.read()
-    image_np = np.frombuffer(image, dtype=np.uint8)
-    image_tensor = PreProcessor.transform_image2torch([image_np] * args.bs).cuda()
+    preporcessor = PreProcessor.get_preprocessor(
+        task=args.task, model_name=args.model, padding="max_length", max_length=args.seq_len
+    )
+    text_tensor = preporcessor([args.data] * args.bs).cuda()
 
     start_time = time.time()
     for _ in trange(args.num_batches):
         start = time.time()
-        model(image_tensor)
+        model(text_tensor)
         torch.cuda.synchronize()
         latency_list.append(time.time() - start)
     finish_time = time.time()
@@ -118,6 +127,8 @@ def process_result(args):
     # }
     gpu_labels: dict = gpu_metrics_dict[args.gpu_id, args.gpu_instance_id].pop('labels')[0]
     result['metrics'] = gpu_metrics_dict[args.gpu_id, args.gpu_instance_id]
+    # patch GPU metrics back
+    gpu_metrics_dict[args.gpu_id, args.gpu_instance_id]['labels'] = [gpu_labels]
 
     # export config
     config = {
@@ -131,9 +142,9 @@ def process_result(args):
     }
     # if MIG is enabled, also obtain sibling GPU instance profile
     if config['mig']['enabled']:
-        gpu_instance_profiles = [config['mig']['gpu_instance_profile']]
+        gpu_instance_profiles = list()
         for k, v in gpu_metrics_dict.items():
-            if k[0] == args.gpu_id and k[1] != args.gpu_instance_id:
+            if k[0] == args.gpu_id:
                 gpu_instance_profiles.append(v['labels'][0]['GPU_I_PROFILE'])
         config['mig']['gpu_instance_profiles'] = gpu_instance_profiles
     result['gpu_model_name'] = config['gpu_static_profile']['modelName']
@@ -145,7 +156,7 @@ if __name__ == '__main__':
     args_ = get_args()
     # Mask out other cuda devices
     os.environ['CUDA_DEVICE_ORDER'] = "PCI_BUS_ID"
-    os.environ['CUDA_VISIBLE_DEVICES'] = args_.device_id
+    os.environ['CUDA_VISIBLE_DEVICES'] = args_.device_uuid
     dcgm_metrics_collector = DCGMMetricCollector()
 
     print('Testing on:')
@@ -172,10 +183,9 @@ if __name__ == '__main__':
                                   '_'.join([
                                       metrics['gpu_model_name'].replace(' ', '-'),
                                       metrics["model_name"], f'bs{metrics["batch_size"]}'
-                                  ]) +
-                                  f'_{metrics["test_time"]}.json'
+                                  ]) + f'.json'
                           )
-    save_json_file_name.parent.mkdir(exist_ok=True)
+    save_json_file_name.parent.mkdir(exist_ok=True, parents=True)
     with open(save_json_file_name, 'w') as f:
         json.dump(metrics, f)
         print(f'result saved successfully as {save_json_file_name}')

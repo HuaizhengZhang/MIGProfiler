@@ -1,9 +1,12 @@
 """
 refernce: https://github.com/nvidia/mig-parted
 """
+import re
 import subprocess
 import os
 from pathlib import Path
+from typing import Optional
+
 SCRIPT_MIGRECONF = str(Path(os.getcwd())/"mig_reconfigure.sh")
 
 
@@ -20,5 +23,4 @@ class MIGPerfController:
         cmd = f'nvidia-smi -i {str(gpu_id)} -mig 1'
         p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         return p.communicate()[0].decode("utf-8")
-
 

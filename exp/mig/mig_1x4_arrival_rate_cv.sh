@@ -4,7 +4,7 @@
 # sudo nvidia-smi -i 0 -mig 1
 # sudo nvidia-smi mig -i 0 -cgi 1g.6gb,1g.6gb,1g.6gb,1g.6gb -C
 GPU_ID=0
-# Note: GPU Instance ID (GPU_I_ID by DCGM) is different from GPU instance device ID. 
+# Note: GPU Instance ID (GPU_I_ID by DCGM) is different from GPU instance device ID.
 # GPU instance ID starts from 1
 GPU_INSTANCE0_UUID='MIG-8b9c1298-b163-5ea0-b796-9f12de8b362a'
 GPU_INSTANCE1_UUID='MIG-6dd9381e-80bd-5581-9702-563ef12adf3a'
@@ -18,6 +18,18 @@ batch_size=1
 EXP_SAVE_DIR="${PWD}"
 cd ../../mig_perf/inference
 export PYTHONPATH="${PWD}"
+
+echo 'Enable MIG'
+sudo nvidia-smi -i "${GPU_ID}" -mig 1
+sudo nvidia-smi mig -cgi 1g.6gb,1g.6gb,1g.6gb,1g.6gb -C
+
+echo 'Start DCGM'
+docker run -d --rm --gpus all --net mig_perf -p 9400:9400  \
+  -v "${EXP_SAVE_DIR}/../../mig_perf/inference/client/dcp-metrics-included.csv:/etc/dcgm-exporter/customized.csv" \
+  --name dcgm_exporter --cap-add SYS_ADMIN   nvcr.io/nvidia/k8s/dcgm-exporter:2.4.7-2.6.11-ubuntu20.04 \
+  -c 500 -f /etc/dcgm-exporter/customized.csv -d f
+sleep 3
+docker ps
 
 # iterate through batch size list
 for ARRIVAL_RATE in "${ARRIVAL_RATES[@]}"; do
@@ -66,3 +78,11 @@ for ARRIVAL_RATE in "${ARRIVAL_RATES[@]}"; do
 
   sleep 10
 done
+
+echo 'Stop DCGM'
+docker stop dcgm_exporter
+
+echo 'Disable MIG'
+sudo nvidia-smi mig -i "${GPU_ID}" -dci
+sudo nvidia-smi mig -i "${GPU_ID}" -dgi
+sudo nvidia-smi -i "${GPU_ID}" -mig 0

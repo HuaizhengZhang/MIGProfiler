@@ -9,6 +9,18 @@ EXP_SAVE_DIR="${PWD}"
 cd ../../mig_perf/inference
 export PYTHONPATH="${PWD}"
 
+echo 'Enable MPS'
+nvidia-cuda-mps-control -d
+echo "MPS control running at $(pidof nvidia-cuda-mps-control)"
+
+echo 'Start DCGM'
+docker run -d --rm --gpus all --net mig_perf -p 9400:9400  \
+  -v "${EXP_SAVE_DIR}/../../mig_perf/inference/client/dcp-metrics-included.csv:/etc/dcgm-exporter/customized.csv" \
+  --name dcgm_exporter --cap-add SYS_ADMIN   nvcr.io/nvidia/k8s/dcgm-exporter:2.4.7-2.6.11-ubuntu20.04 \
+  -c 500 -f /etc/dcgm-exporter/customized.csv -d f
+sleep 3
+docker ps
+
 for ARRIVAL_RATE in "${ARRIVAL_RATES[@]}"; do
   echo 'Start server0'
   MAX_BATCH_SIZE="${batch_size}" MAX_WAIT_TIME=10 MODEL_NAME="${MODEL_NAME}" TASK="image_classification" DEVICE_ID="${GPU_ID}" python server/app.py > /dev/null 2>&1 &
@@ -55,3 +67,9 @@ for ARRIVAL_RATE in "${ARRIVAL_RATES[@]}"; do
 
   sleep 10
 done
+
+echo 'Disable MPS'
+echo quit | nvidia-cuda-mps-control
+
+echo 'Shutdown DCGM'
+docker stop dcgm_exporter
