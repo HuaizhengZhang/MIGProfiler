@@ -18,10 +18,11 @@ import numpy as np
 import torch
 from torch import nn
 from torch.backends import cudnn
+from transformers import AutoTokenizer
 from tqdm.auto import tqdm
 
 from client.monitor import DCGMMetricCollector
-from utils.data_hub import load_places365_data, DEFAULT_DATASET_ROOT
+from utils.data_hub import load_amazon_review_data, DEFAULT_DATASET_ROOT
 from utils.misc import get_ids_from_mig_device_id, get_gpu_device_uuid, consolidate_list_of_dict
 from utils.model_hub import load_pytorch_model
 
@@ -30,17 +31,18 @@ raw_results = list()
 
 
 def get_args():
-    parser = argparse.ArgumentParser(description='CV model training')
+    parser = argparse.ArgumentParser(description='NLP model training')
     parser.add_argument('-T', '--task', type=str, default='single_label_classification',
                         help='The service name you are testing. Default to image_classification.')
     parser.add_argument('-b', '--bs', help='training batch size', type=int, default=256)
     parser.add_argument('-m', '--model', type=str, required=True,
                         help='Name of the used models. For example, bert-base-cased.')
+    parser.add_argument('--seq_len', type=int, default=64, help='Max sequence length')
     parser.add_argument('-n', '--max_train_steps', type=int, required=True, help='Total number of batches to test.')
     parser.add_argument('--lr', type=float, default=0.1, help='Learning rate')
     parser.add_argument('--weight-decay', '--wd', default=1e-4, type=float,
                         help='weight decay (default: 1e-4)')
-    parser.add_argument('--num_classes', default=365, type=int, help='num of class in the model')
+    parser.add_argument('--num_classes', default=4, type=int, help='num of class in the model')
     # GPU related arguments
     parser.add_argument(
         '-i', '--gpu-id', type=int, default=0,
@@ -72,8 +74,7 @@ def warm_up(args):
             if step == num:
                 break
             for k, v in batch.items():
-                batch[k] = v.to(device)
-            inputs = inputs.cuda()
+                batch[k] = v.cuda()
             model(**batch)
     torch.cuda.synchronize()
 
@@ -84,15 +85,16 @@ def train_func(args):
     model.train()
     step_start_time = start_time = time.time()
     step_num = args.max_train_steps or len(train_dataloader)
-    for step, (inputs, labels) in enumerate(tqdm(train_dataloader, total=step_num)):
+    for step, batch in enumerate(tqdm(train_dataloader, total=step_num)):
         if args.max_train_steps and step >= args.max_train_steps:
             break
 
         for k, v in batch.items():
-            batch[k] = v.to(device)
+            batch[k] = v.cuda()
         data_process_time = time.time()
+        labels = batch['labels']
         output = model(**batch)
-        loss = output.loss
+        loss = criterion(output.logits, labels)
         torch.cuda.synchronize()
         forward_time = time.time()
 
@@ -139,9 +141,9 @@ def process_result(args):
 
     result = {
         'test_time': datetime.now().strftime('%Y-%m-%d_%H-%M-%S'), 'start_time': start_time,
-        'train_steps': args.max_train_steps, 'batch_size': args.bs, 'model_name': args.model,
-        'task': args.task, 'learning_rate': args.lr, 'momentum': args.momentum,
-        'weight_decay': args.weight_decay,
+        'train_steps': args.max_train_steps, 'batch_size': args.bs, 'sequence_length': args.seq_len, 
+        'model_name': args.model, 'task': args.task, 
+        'learning_rate': args.lr, 'weight_decay': args.weight_decay,
         'qps': args.max_train_steps * args.bs / (finish_time - start_time),
     }
 
@@ -194,9 +196,9 @@ if __name__ == '__main__':
     print(f'batch size: {args_.bs};', f'model name: {args_.model}')
 
     print('Prepare dataset...')
-    tokenizer = AutoTokenizer.from_pretrained(args_.model_name)
+    tokenizer = AutoTokenizer.from_pretrained(args_.model)
     train_dataloader, val_dataloader = load_amazon_review_data(
-        batch_size=args_.bs, max_seq_len=args.seq_len, tokenizer=tokenizer,
+        batch_size=args_.bs, max_seq_len=args_.seq_len, tokenizer=tokenizer,
     )
 
     print(f'Load {args_.model} model...')
@@ -204,6 +206,8 @@ if __name__ == '__main__':
 
     print('Setup optimizer')
     optimizer = torch.optim.AdamW(model.parameters(), args_.lr, weight_decay=args_.weight_decay)
+    print('Setup loss')
+    criterion = nn.CrossEntropyLoss().cuda()
 
     print('Warming up...')
     warm_up(args_)
@@ -224,6 +228,7 @@ if __name__ == '__main__':
                                       metrics['gpu_model_name'].replace(' ', '-'),
                                       metrics["model_name"],
                                       f'bs{metrics["batch_size"]}',
+                                      f'seq{metrics["sequence_length"]}',
                                       f'lr{metrics["learning_rate"]}',
                                   ]) + (f'_{args_.report_suffix}' if args_.report_suffix else '') + '.json'
                               # f'_{metrics["test_time"]}.json'
@@ -232,3 +237,4 @@ if __name__ == '__main__':
     with open(save_json_file_name, 'w') as f:
         json.dump(metrics, f)
         print(f'result saved successfully as {save_json_file_name}')
+

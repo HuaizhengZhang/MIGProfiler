@@ -9,6 +9,7 @@ import argparse
 import json
 import os
 import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from copy import deepcopy
 from datetime import datetime
 from pathlib import Path
@@ -35,11 +36,13 @@ def get_args():
     parser.add_argument('-b', '--bs', help='frontend batch size', type=int, required=True)
     parser.add_argument('-m', '--model', type=str, required=True,
                         help='Name of the used models. For example, bert-base-cased.')
-    parser.add_argument('-T', '--task', type=str, default='single_label_classification',
+    parser.add_argument('-T', '--task', type=str, default='sequence_classification',
                         help='The service name you are testing. Default to image_classification.')
     parser.add_argument('-n', '--num_batches', type=int, required=True, help='Total number of batches to test.')
     parser.add_argument('--data', type=str, default=TEXT_DATA,
                         help=f'The path to your testing image. Default to {TEXT_DATA}')
+    parser.add_argument('-t', '--num_threads', type=int, default=1,
+                        help='number of threads to run concurrently to profile')
     parser.add_argument('--seq_len', type=int, default=64, help='Sequence length of the text to be tested.')
     # GPU related arguments
     parser.add_argument(
@@ -86,12 +89,24 @@ def test_block_inference(args):
     text_tensor = preporcessor([args.data] * args.bs).cuda()
 
     start_time = time.time()
-    for _ in trange(args.num_batches):
+    
+    results = set()
+    with ThreadPoolExecutor(args.num_threads) as executor:
+        for _ in range(args.num_threads):
+            results.add(executor.submit(sender, text_tensor, args.num_batches))
+
+    for future in as_completed(results):
+        future.result()
+
+    finish_time = time.time()
+
+
+def sender(tensor, num_batches):
+    for _ in trange(num_batches):
         start = time.time()
-        model(text_tensor)
+        model(tensor)
         torch.cuda.synchronize()
         latency_list.append(time.time() - start)
-    finish_time = time.time()
 
 
 def process_result(args):
@@ -112,7 +127,9 @@ def process_result(args):
     # report
     result = {
         'test_time': datetime.now().strftime('%Y-%m-%d_%H-%M-%S'), 'start_time': start_time,
-        'num_test_batches': args.num_batches, 'batch_size': args.bs, 'model_name': args.model, 'task': args.task,
+        'num_test_batches': args.num_batches, 'batch_size': args.bs, 
+        'num_threads': args.num_threads, 'sequence_length': args.seq_len, 
+        'model_name': args.model, 'task': args.task,
         'qps': args.num_batches * args.bs / (finish_time - start_time),
         'latency': latency_list,
     }
@@ -164,7 +181,7 @@ if __name__ == '__main__':
     print(f'batch size: {args_.bs};', f'model name: {args_.model}')
 
     print(f'Load {args_.model} model...')
-    model = load_pytorch_model(model_name=args_.model, task=args_.task).cuda()
+    model = load_pytorch_model(model_name=args_.model).cuda()
     print('Warming up...')
     warm_up(args_)
     print('Testing...')
@@ -182,7 +199,10 @@ if __name__ == '__main__':
         args_.database_name) / (
                                   '_'.join([
                                       metrics['gpu_model_name'].replace(' ', '-'),
-                                      metrics["model_name"], f'bs{metrics["batch_size"]}'
+                                      metrics["model_name"], 
+                                      f'bs{metrics["batch_size"]}',
+                                      f'seq{metrics["sequence_length"]}',
+                                      f'j{metrics["num_threads"]}',
                                   ]) + f'.json'
                           )
     save_json_file_name.parent.mkdir(exist_ok=True, parents=True)
