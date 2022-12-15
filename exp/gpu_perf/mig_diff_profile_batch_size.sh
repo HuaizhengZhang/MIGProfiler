@@ -9,13 +9,13 @@ EXP_SAVE_DIR="${PWD}"
 cd ../../mig_perf/inference
 export PYTHONPATH="${PWD}"
 
+echo 'Enable MIG'
+sudo nvidia-smi -i "${GPU_ID}" -mig 1
 # Try different MIG profiles
 for MIG_PROFILE in "${MIG_PROFILES[@]}"; do
   echo '=========================================================='
   echo " * MIG PROFILE = ${MIG_PROFILE}"
   echo '=========================================================='
-  echo 'Enable MIG'
-  sudo nvidia-smi -i "${GPU_ID}" -mig 1
   sudo nvidia-smi mig -i 0 -cgi "${MIG_PROFILE}" -C
 
   echo 'Start DCGM'
@@ -40,10 +40,10 @@ for MIG_PROFILE in "${MIG_PROFILES[@]}"; do
   echo 'Stop DCGM'
   docker stop dcgm_exporter
 
-  echo 'Disable MIG'
   sudo nvidia-smi mig -i "${GPU_ID}" -dci
   sudo nvidia-smi mig -i "${GPU_ID}" -dgi
-  sudo nvidia-smi -i "${GPU_ID}" -mig 0
 
   sleep 10
 done
+echo 'Disable MIG'
+sudo nvidia-smi -i "${GPU_ID}" -mig 0
