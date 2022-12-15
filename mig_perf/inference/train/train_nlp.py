@@ -42,7 +42,7 @@ def get_args():
     parser.add_argument('--lr', type=float, default=0.1, help='Learning rate')
     parser.add_argument('--weight-decay', '--wd', default=1e-4, type=float,
                         help='weight decay (default: 1e-4)')
-    parser.add_argument('--num_classes', default=4, type=int, help='num of class in the model')
+    parser.add_argument('--num_classes', default=5, type=int, help='num of class in the model')
     # GPU related arguments
     parser.add_argument(
         '-i', '--gpu-id', type=int, default=0,
