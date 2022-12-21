@@ -1,8 +1,10 @@
 #! /usr/bin/env bash
 GPU_ID=0
-MODEL_NAME='resnet50'
+MODEL_NAME='bert-base-cased'
 NUM_TEST_BATCHES=1000
-BATCH_SIZES=(1 2 4 8 16 32 64)
+BATCH_SIZE=32
+SEQ_LENS=(32 64 128 256)
+NUM_THREADS=4
 
 EXP_SAVE_DIR="${PWD}"
 cd ../../mig_perf/inference
@@ -17,11 +19,11 @@ sleep 3
 docker ps
 
 # iterate through batch size list
-for BATCH_SIZE in "${BATCH_SIZES[@]}"; do
-  echo "Batch size ${BATCH_SIZE}"
+for SEQ_LEN in "${SEQ_LENS[@]}"; do
+  echo "Batch size ${SEQ_LEN}"
   echo 'Start profiling client 0'
-  python client/block_inference_cv.py -b "${BATCH_SIZE}" -m "${MODEL_NAME}" -n "${NUM_TEST_BATCHES}" \
-    -i "${GPU_ID}" -dbn "${EXP_SAVE_DIR}/batch_size/no_mig"
+  python client/block_inference_nlp.py -b "${BATCH_SIZE}" -m "${MODEL_NAME}" -n "${NUM_TEST_BATCHES}" -t "${NUM_THREADS}" \
+    -i "${GPU_ID}" --seq_len "${SEQ_LEN}" -dbn "${EXP_SAVE_DIR}/seq_length/async_block_request/no_mig"
 
   echo 'Finish!'
   sleep 10

@@ -1,9 +1,12 @@
 #! /usr/bin/env bash
 GPU_ID=0
-MODEL_NAME='resnet50'
-NUM_TRAIN_BATCHES=500
-MIG_PROFILES=('1g.10gb' '2g.20gb' '3g.40gb' '4g.40gb' '7g.80gb')
-BATCH_SIZES=(16 32 64 128 256 512)
+MODEL_NAME='bert-base-cased'
+NUM_TEST_BATCHES=1000
+# MIG_PROFILES=('1g.10gb' '2g.20gb' '3g.40gb' '4g.40gb' '7g.80gb')
+MIG_PROFILES=('3g.40gb' '4g.40gb' '7g.80gb')
+SEQ_LENS=(32 64 128 256)
+NUM_THREADS=4
+BATCH_SIZE=32
 
 EXP_SAVE_DIR="${PWD}"
 cd ../../mig_perf/inference
@@ -17,6 +20,7 @@ for MIG_PROFILE in "${MIG_PROFILES[@]}"; do
   echo " * MIG PROFILE = ${MIG_PROFILE}"
   echo '=========================================================='
   sudo nvidia-smi mig -i 0 -cgi "${MIG_PROFILE}" -C
+  sleep 5
 
   echo 'Start DCGM'
   docker run -d --rm --gpus all --net mig_perf -p 9400:9400  \
@@ -27,11 +31,12 @@ for MIG_PROFILE in "${MIG_PROFILES[@]}"; do
   docker ps
 
   # iterate through batch size list
-  for BATCH_SIZE in "${BATCH_SIZES[@]}"; do
-    echo "Batch size ${BATCH_SIZE}"
+  for SEQ_LEN in "${SEQ_LENS[@]}"; do
+    echo "Sequence length ${SEQ_LEN}"
     echo 'Start profiling client 0'
-    python train/train_cv.py -b "${BATCH_SIZE}" -m "${MODEL_NAME}" -n "${NUM_TRAIN_BATCHES}" \
-      -i "${GPU_ID}" -mi 0 -dbn "${EXP_SAVE_DIR}/train/${MIG_PROFILE}"
+    python client/block_inference_nlp.py -b "${BATCH_SIZE}" -m "${MODEL_NAME}" -n "${NUM_TEST_BATCHES}" \
+      -t "${NUM_THREADS}" --seq_len "${SEQ_LEN}" \
+      -i "${GPU_ID}" -mi 0 -dbn "${EXP_SAVE_DIR}/seq_length/async_block_request/${MIG_PROFILE}" --report-suffix "seq${SEQ_LEN}"
 
     echo 'Finish!'
     sleep 10
