@@ -28,17 +28,17 @@ docker ps
 for MODEL_NAME in "${MODEL_NAMES[@]}"; do
     echo "Batch size ${BATCH_SIZE}"
     echo 'Start client 1'
-    python client/block_inference_cv.py  -b "${BATCH_SIZE}" -m "${MODEL_NAME}" -n 1048575  \
+    python client/block_inference_cv.py  -b "${BATCH_SIZE}" -m "${MODEL_NAME}" -n "${NUM_TEST_BATCHES}"  \
       -i "${GPU_ID}" -mi 1 -dbn "${EXP_SAVE_DIR}" --report-suffix client0  > /dev/null 2>&1 &
     CLIENT1_PID=$!
 
     echo 'Start client 2'
-    python client/block_inference_cv.py  -b "${BATCH_SIZE}" -m "${MODEL_NAME}" -n 1048575  \
+    python client/block_inference_cv.py  -b "${BATCH_SIZE}" -m "${MODEL_NAME}" -n "${NUM_TEST_BATCHES}"  \
       -i "${GPU_ID}" -mi 2 -dbn "${EXP_SAVE_DIR}" --report-suffix client0  > /dev/null 2>&1 &
     CLIENT2_PID=$!
 
     echo 'Start client 3'
-    python client/block_inference_cv.py  -b "${BATCH_SIZE}" -m "${MODEL_NAME}" -n 1048575  \
+    python client/block_inference_cv.py  -b "${BATCH_SIZE}" -m "${MODEL_NAME}" -n "${NUM_TEST_BATCHES}"  \
       -i "${GPU_ID}" -mi 3 -dbn "${EXP_SAVE_DIR}" --report-suffix client0  > /dev/null 2>&1 &
     CLIENT3_PID=$!
 
