@@ -19,7 +19,7 @@ echo " * MIG PROFILE = ${MIG_PROFILE}"
 echo '=========================================================='
 echo 'Start DCGM'
 docker run -d --rm --gpus all --net mig_perf -p 9400:9400  \
-  -v "${DCGM_EXPORTER_METRICS_PATH}" \
+  -v "${DCGM_EXPORTER_METRICS_PATH}:/etc/dcgm-exporter/customized.csv" \
   --name dcgm_exporter --cap-add SYS_ADMIN   nvcr.io/nvidia/k8s/dcgm-exporter:2.4.7-2.6.11-ubuntu20.04 \
   -c 500 -f /etc/dcgm-exporter/customized.csv -d f
 sleep 3
