@@ -5,8 +5,8 @@ NUM_TEST_BATCHES=1000
 BATCH_SIZES=(1 2 4 8 16 32 64)
 
 BASE_DIR=$(realpath $0 | xargs dirname)
-EXP_SAVE_DIR="${BASE_DIR}/batch_size2x2"
-PYTHON_EXECUTION_ROOT="${BASE_DIR}/../../mig_perf/inference"
+EXP_SAVE_DIR="${BASE_DIR}/2g.12gbx2"
+PYTHON_EXECUTION_ROOT="${BASE_DIR}/../../../mig_perf/inference"
 DCGM_EXPORTER_METRICS_PATH="${PYTHON_EXECUTION_ROOT}/client/dcp-metrics-included.csv:/etc/dcgm-exporter/customized.csv"
 cd "${PYTHON_EXECUTION_ROOT}"
 export PYTHONPATH="${PYTHON_EXECUTION_ROOT}"

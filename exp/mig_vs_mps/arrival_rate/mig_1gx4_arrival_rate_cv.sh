@@ -15,18 +15,22 @@ TEST_TIME=30
 ARRIVAL_RATES=(25 50 75 100 125 150 200)
 batch_size=1
 
-EXP_SAVE_DIR="${PWD}"
-cd ../../mig_perf/inference
-export PYTHONPATH="${PWD}"
+BASE_DIR=$(realpath $0 | xargs dirname)
+EXP_SAVE_DIR="${BASE_DIR}/1g.6gbx4"
+PYTHON_EXECUTION_ROOT="${BASE_DIR}/../../../mig_perf/inference"
+DCGM_EXPORTER_METRICS_PATH="${PYTHON_EXECUTION_ROOT}/client/dcp-metrics-included.csv:/etc/dcgm-exporter/customized.csv"
+cd "${PYTHON_EXECUTION_ROOT}"
+export PYTHONPATH="${PYTHON_EXECUTION_ROOT}"
 
 echo 'Enable MIG'
 sudo nvidia-smi -i "${GPU_ID}" -mig 1
+echo 'Create MIG instances'
 sudo nvidia-smi mig -cgi 1g.6gb,1g.6gb,1g.6gb,1g.6gb -C
 
 echo 'Start DCGM'
 docker run -d --rm --gpus all --net mig_perf -p 9400:9400  \
-  -v "${EXP_SAVE_DIR}/../../mig_perf/inference/client/dcp-metrics-included.csv:/etc/dcgm-exporter/customized.csv" \
-  --name dcgm_exporter --cap-add SYS_ADMIN   nvcr.io/nvidia/k8s/dcgm-exporter:2.4.7-2.6.11-ubuntu20.04 \
+  -v "${DCGM_EXPORTER_METRICS_PATH}:/etc/dcgm-exporter/customized.csv" \
+  --name dcgm_exporter --cap-add SYS_ADMIN nvcr.io/nvidia/k8s/dcgm-exporter:2.4.7-2.6.11-ubuntu20.04 \
   -c 500 -f /etc/dcgm-exporter/customized.csv -d f
 sleep 3
 docker ps
@@ -52,19 +56,19 @@ for ARRIVAL_RATE in "${ARRIVAL_RATES[@]}"; do
   sleep 5
 
   echo 'Start profiling client 1'
-  python client/pytorch_cv_client.py --url 'http://localhost:50076' -r "${ARRIVAL_RATE}" -dbn "${EXP_SAVE_DIR}/arrival_rate_1x4" --report-suffix 'client1' -b "${batch_size}" -t "${TEST_TIME}" -P -m "${MODEL_NAME}" -i "${GPU_ID}" -gi 4 > /dev/null 2>&1 &
+  python client/pytorch_cv_client.py --url 'http://localhost:50076' -r "${ARRIVAL_RATE}" -dbn "${EXP_SAVE_DIR}" --report-suffix 'client1' -b "${batch_size}" -t "${TEST_TIME}" -P -m "${MODEL_NAME}" -i "${GPU_ID}" -gi 4 > /dev/null 2>&1 &
   CLIENT1_PID=$!
 
   echo 'Start profiling client 2'
-  python client/pytorch_cv_client.py --url 'http://localhost:50077' -r "${ARRIVAL_RATE}" -dbn "${EXP_SAVE_DIR}/arrival_rate_1x4" --report-suffix 'client2' -b "${batch_size}" -t "${TEST_TIME}" -P -m "${MODEL_NAME}" -i "${GPU_ID}" -gi 5 > /dev/null 2>&1 &
+  python client/pytorch_cv_client.py --url 'http://localhost:50077' -r "${ARRIVAL_RATE}" -dbn "${EXP_SAVE_DIR}" --report-suffix 'client2' -b "${batch_size}" -t "${TEST_TIME}" -P -m "${MODEL_NAME}" -i "${GPU_ID}" -gi 5 > /dev/null 2>&1 &
   CLIENT2_PID=$!
 
   echo 'Start profiling client 3'
-  python client/pytorch_cv_client.py --url 'http://localhost:50078' -r "${ARRIVAL_RATE}" -dbn "${EXP_SAVE_DIR}/arrival_rate_1x4" --report-suffix 'client3' -b "${batch_size}" -t "${TEST_TIME}" -P -m "${MODEL_NAME}" -i "${GPU_ID}" -gi 6 > /dev/null 2>&1 &
+  python client/pytorch_cv_client.py --url 'http://localhost:50078' -r "${ARRIVAL_RATE}" -dbn "${EXP_SAVE_DIR}" --report-suffix 'client3' -b "${batch_size}" -t "${TEST_TIME}" -P -m "${MODEL_NAME}" -i "${GPU_ID}" -gi 6 > /dev/null 2>&1 &
   CLIENT3_PID=$!
 
   echo 'Start profiling client 0'
-  python client/pytorch_cv_client.py -r "${ARRIVAL_RATE}" -dbn "${EXP_SAVE_DIR}/arrival_rate_1x4" --report-suffix 'client0' -b "${batch_size}" -t "${TEST_TIME}" -P -m "${MODEL_NAME}" -i "${GPU_ID}" -gi 3
+  python client/pytorch_cv_client.py -r "${ARRIVAL_RATE}" -dbn "${EXP_SAVE_DIR}" --report-suffix 'client0' -b "${batch_size}" -t "${TEST_TIME}" -P -m "${MODEL_NAME}" -i "${GPU_ID}" -gi 3
 
   echo 'Wait all client to finish'
   wait $CLIENT1_PID
@@ -82,7 +86,10 @@ done
 echo 'Stop DCGM'
 docker stop dcgm_exporter
 
-echo 'Disable MIG'
+echo 'Destroy MIG instances'
 sudo nvidia-smi mig -i "${GPU_ID}" -dci
 sudo nvidia-smi mig -i "${GPU_ID}" -dgi
+echo 'Disable MIG'
 sudo nvidia-smi -i "${GPU_ID}" -mig 0
+echo 'Reset GPU'
+sudo nvidia-smi -i "${GPU_ID}" -r

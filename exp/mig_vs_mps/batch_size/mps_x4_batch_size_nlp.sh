@@ -6,11 +6,14 @@ BATCH_SIZES=(1 2 4 8 16 32 64)
 SEQ_LEN=64
 
 BASE_DIR=$(realpath $0 | xargs dirname)
-EXP_SAVE_DIR="${BASE_DIR}/batch_size_4_instance"
-PYTHON_EXECUTION_ROOT="${BASE_DIR}/../../mig_perf/inference"
+EXP_SAVE_DIR="${BASE_DIR}/mps_x4"
+PYTHON_EXECUTION_ROOT="${BASE_DIR}/../../../mig_perf/inference"
 DCGM_EXPORTER_METRICS_PATH="${PYTHON_EXECUTION_ROOT}/client/dcp-metrics-included.csv:/etc/dcgm-exporter/customized.csv"
 cd "${PYTHON_EXECUTION_ROOT}"
 export PYTHONPATH="${PYTHON_EXECUTION_ROOT}"
+
+echo 'Set GPU compute mode to EXCLUSIVE_PROCESS'
+sudo nvidia-smi -i "${GPU_ID}" -c EXCLUSIVE_PROCESS
 
 echo 'Enable MPS'
 nvidia-cuda-mps-control -d
@@ -61,3 +64,6 @@ echo quit | nvidia-cuda-mps-control
 
 echo 'Shutdown DCGM'
 docker stop dcgm_exporter
+
+echo 'Set GPU compute mode to DEFAULT'
+sudo nvidia-smi -i "${GPU_ID}" -c DEFAULT
