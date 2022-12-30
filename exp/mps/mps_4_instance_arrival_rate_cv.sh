@@ -5,9 +5,12 @@ TEST_TIME=30
 ARRIVAL_RATES=(25 50 75 100 125 150 200)
 batch_size=1
 
-EXP_SAVE_DIR="${PWD}"
-cd ../../mig_perf/inference
-export PYTHONPATH="${PWD}"
+BASE_DIR=$(realpath $0 | xargs dirname)
+EXP_SAVE_DIR="${BASE_DIR}/arrival_rate_4_instance"
+PYTHON_EXECUTION_ROOT="${BASE_DIR}/../../mig_perf/inference"
+DCGM_EXPORTER_METRICS_PATH="${PYTHON_EXECUTION_ROOT}/client/dcp-metrics-included.csv:/etc/dcgm-exporter/customized.csv"
+cd "${PYTHON_EXECUTION_ROOT}"
+export PYTHONPATH="${PYTHON_EXECUTION_ROOT}"
 
 echo 'Enable MPS'
 nvidia-cuda-mps-control -d
@@ -15,7 +18,7 @@ echo "MPS control running at $(pidof nvidia-cuda-mps-control)"
 
 echo 'Start DCGM'
 docker run -d --rm --gpus all --net mig_perf -p 9400:9400  \
-  -v "${EXP_SAVE_DIR}/../../mig_perf/inference/client/dcp-metrics-included.csv:/etc/dcgm-exporter/customized.csv" \
+  -v "${DCGM_EXPORTER_METRICS_PATH}:/etc/dcgm-exporter/customized.csv" \
   --name dcgm_exporter --cap-add SYS_ADMIN   nvcr.io/nvidia/k8s/dcgm-exporter:2.4.7-2.6.11-ubuntu20.04 \
   -c 500 -f /etc/dcgm-exporter/customized.csv -d f
 sleep 3
@@ -41,19 +44,19 @@ for ARRIVAL_RATE in "${ARRIVAL_RATES[@]}"; do
   sleep 5
 
   echo 'Start profiling client 1'
-  python client/pytorch_cv_client.py --url 'http://localhost:50076' -r "${ARRIVAL_RATE}" -dbn "${EXP_SAVE_DIR}/arrival_rate_4_instance" --report-suffix 'client1' -b "${batch_size}" -t "${TEST_TIME}" -P -m "${MODEL_NAME}" -i "${GPU_ID}" > /dev/null 2>&1 &
+  python client/pytorch_cv_client.py --url 'http://localhost:50076' -r "${ARRIVAL_RATE}" -dbn "${EXP_SAVE_DIR}" --report-suffix 'client1' -b "${batch_size}" -t "${TEST_TIME}" -P -m "${MODEL_NAME}" -i "${GPU_ID}" > /dev/null 2>&1 &
   CLIENT1_PID=$!
 
   echo 'Start profiling client 2'
-  python client/pytorch_cv_client.py --url 'http://localhost:50077' -r "${ARRIVAL_RATE}" -dbn "${EXP_SAVE_DIR}/arrival_rate_4_instance" --report-suffix 'client2' -b "${batch_size}" -t "${TEST_TIME}" -P -m "${MODEL_NAME}" -i "${GPU_ID}" > /dev/null 2>&1 &
+  python client/pytorch_cv_client.py --url 'http://localhost:50077' -r "${ARRIVAL_RATE}" -dbn "${EXP_SAVE_DIR}" --report-suffix 'client2' -b "${batch_size}" -t "${TEST_TIME}" -P -m "${MODEL_NAME}" -i "${GPU_ID}" > /dev/null 2>&1 &
   CLIENT2_PID=$!
 
   echo 'Start profiling client 3'
-  python client/pytorch_cv_client.py --url 'http://localhost:50078' -r "${ARRIVAL_RATE}" -dbn "${EXP_SAVE_DIR}/arrival_rate_4_instance" --report-suffix 'client3' -b "${batch_size}" -t "${TEST_TIME}" -P -m "${MODEL_NAME}" -i "${GPU_ID}" > /dev/null 2>&1 &
+  python client/pytorch_cv_client.py --url 'http://localhost:50078' -r "${ARRIVAL_RATE}" -dbn "${EXP_SAVE_DIR}" --report-suffix 'client3' -b "${batch_size}" -t "${TEST_TIME}" -P -m "${MODEL_NAME}" -i "${GPU_ID}" > /dev/null 2>&1 &
   CLIENT3_PID=$!
 
   echo 'Start profiling client 0'
-  python client/pytorch_cv_client.py -r "${ARRIVAL_RATE}" -dbn "${EXP_SAVE_DIR}/arrival_rate_4_instance" --report-suffix 'client0' -b "${batch_size}" -t "${TEST_TIME}" -P -m "${MODEL_NAME}" -i "${GPU_ID}"
+  python client/pytorch_cv_client.py -r "${ARRIVAL_RATE}" -dbn "${EXP_SAVE_DIR}" --report-suffix 'client0' -b "${batch_size}" -t "${TEST_TIME}" -P -m "${MODEL_NAME}" -i "${GPU_ID}"
 
   echo 'Wait all client to finish'
   wait $CLIENT1_PID
