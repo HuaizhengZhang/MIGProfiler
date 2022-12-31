@@ -1,0 +1,18 @@
+name: "resnet50"
+platform: "pytorch_libtorch"
+max_batch_size: 8
+input [
+    {
+        name: "INPUT__0"
+        data_type: TYPE_FP32
+        format: FORMAT_NCHW
+        dims: [3, 224, 224]
+    }
+]
+output [
+    {
+        name: "OUTPUT__0"
+        data_type: TYPE_FP32
+        dims: [1000]
+    }
+]
