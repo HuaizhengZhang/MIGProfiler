@@ -1,4 +1,7 @@
 # MIG Profiler
+
+![GitHub](https://img.shields.io/github/license/MLSysOps/MIGProfiler)
+
 MIGProfiler is a toolkit for benchmark study on NVIDIA [MIG](https://www.nvidia.com/en-sg/technologies/multi-instance-gpu/) techniques. It provides profiling on multiple deep learning training and inference tasks on MIG GPUs. 
 
 MIGProfiler is featured for:
@@ -115,4 +118,4 @@ See more benchmark experiments in [`./exp`](./exp).
 Special thanks to Aliyun and NVIDIA AI Tech center to provide MIG GPU server for benchmarking.
 
 ## License
-This repository is open-sourced under [MIT License](.).
+This repository is open-sourced under [MIT License](./LICENSE).
