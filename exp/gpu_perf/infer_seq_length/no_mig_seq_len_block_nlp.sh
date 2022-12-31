@@ -9,7 +9,7 @@ MIG_PROFILE='no_mig'
 
 BASE_DIR=$(realpath $0 | xargs dirname)
 EXP_SAVE_DIR="${BASE_DIR}/seq_length/block_request"
-PYTHON_EXECUTION_ROOT="${BASE_DIR}/../../../mig_perf/inference"
+PYTHON_EXECUTION_ROOT="${BASE_DIR}/../../../mig_perf/profiler"
 DCGM_EXPORTER_METRICS_PATH="${PYTHON_EXECUTION_ROOT}/client/dcp-metrics-included.csv:/etc/dcgm-exporter/customized.csv"
 cd "${PYTHON_EXECUTION_ROOT}"
 export PYTHONPATH="${PYTHON_EXECUTION_ROOT}"

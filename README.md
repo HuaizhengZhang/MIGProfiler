@@ -64,16 +64,16 @@ sudo nvidia-smi mig -cgi 1g.10gb -C
 Start DCGM metric exporter
 ```shell
 docker run -d --rm --gpus all --net mig_perf -p 9400:9400  \
-    -v "${PWD}/mig_perf/inference/client/dcp-metrics-included.csv:/etc/dcgm-exporter/customized.csv" \
+    -v "${PWD}/mig_perf/profiler/client/dcp-metrics-included.csv:/etc/dcgm-exporter/customized.csv" \
     --name dcgm_exporter --cap-add SYS_ADMIN   nvcr.io/nvidia/k8s/dcgm-exporter:2.4.7-2.6.11-ubuntu20.04 \
     -c 500 -f /etc/dcgm-exporter/customized.csv -d f
 ```
 
 Start to profile
 ```shell
-cd mig_perf/train
+cd mig_perf/profiler
 export PYTHONPATH=$PWD
-python train_cv.py --bs=32 --model=resnet50 --num_batches=500 --mig-device-id=0
+python train/train_cv.py --bs=32 --model=resnet50 --num_batches=500 --mig-device-id=0
 ```
 
 Remeber to disable MIG after finish benchmark
@@ -88,16 +88,16 @@ sudo nvidia-smi -i 0 -mig 0
 Start DCGM metric exporter
 ```shell
 docker run -d --rm --gpus all --net mig_perf -p 9400:9400  \
-    -v "${PWD}/mig_perf/inference/client/dcp-metrics-included.csv:/etc/dcgm-exporter/customized.csv" \
+    -v "${PWD}/mig_perf/profiler/client/dcp-metrics-included.csv:/etc/dcgm-exporter/customized.csv" \
     --name dcgm_exporter --cap-add SYS_ADMIN   nvcr.io/nvidia/k8s/dcgm-exporter:2.4.7-2.6.11-ubuntu20.04 \
     -c 500 -f /etc/dcgm-exporter/customized.csv -d f
 ```
 
 Start to profile
 ```shell
-cd mig_perf/inference
+cd mig_perf/profiler
 export PYTHONPATH=$PWD
-python block_infernece_cv.py --bs=32 --model=resnet50 --num_batches=500 --mig-device-id=0
+python client/block_infernece_cv.py --bs=32 --model=resnet50 --num_batches=500 --mig-device-id=0
 ```
 
 See more benchmark experiments in [`./exp`](./exp).
