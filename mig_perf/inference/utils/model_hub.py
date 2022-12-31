@@ -49,7 +49,12 @@ def load_pytorch_model(model_name: str, task: str = 'model', **kwargs):
         import torchvision
         return getattr(torchvision.models, model_name)(**kwargs)
     elif model_name in _MODEL_NLP_REPOSITORY:
-        from transformers import AutoModelForSequenceClassification
-        return AutoModelForSequenceClassification.from_pretrained(model_name)
+        from transformers import AutoModelForSequenceClassification, AutoConfig
+
+        transformer_config = AutoConfig.from_pretrained(model_name)
+        if kwargs.get('num_labels'):
+            transformer_config.num_labels = kwargs['num_labels']
+        transformer_config.problem_type = task
+        return AutoModelForSequenceClassification.from_config(transformer_config)
     else:
         raise ValueError(f'model name={model_name} not supported.')

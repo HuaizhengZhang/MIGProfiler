@@ -9,6 +9,7 @@ import argparse
 import json
 import os
 import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from copy import deepcopy
 from datetime import datetime
 from pathlib import Path
@@ -39,6 +40,7 @@ def get_args():
     parser.add_argument('-n', '--num_batches', type=int, required=True, help='Total number of batches to test.')
     parser.add_argument('--data', type=str, default=DATA_PATH,
                         help=f'The path to your testing image. Default to {DATA_PATH}')
+    parser.add_argument('-t', '--num_threads', type=int, default=1, help='number of threads to run concurrently to profile')
     # GPU related arguments
     parser.add_argument(
         '-i', '--gpu-id', type=int, default=0,
@@ -83,9 +85,22 @@ def test_block_inference(args):
     image_tensor = PreProcessor.transform_image2torch([image_np] * args.bs).cuda()
 
     start_time = time.time()
-    for _ in trange(args.num_batches):
+    
+    results = set()
+    with ThreadPoolExecutor(args.num_threads) as executor:
+        for _ in range(args.num_threads):
+            results.add(executor.submit(sender, image_tensor, args.num_batches))
+
+    for future in as_completed(results):
+        future.result()
+
+    finish_time = time.time()
+
+
+def sender(tensor, num_batches):
+    for _ in trange(num_batches):
         start = time.time()
-        model(image_tensor)
+        model(tensor)
         torch.cuda.synchronize()
         latency_list.append(time.time() - start)
     finish_time = time.time()
@@ -110,7 +125,7 @@ def process_result(args):
     result = {
         'test_time': datetime.now().strftime('%Y-%m-%d_%H-%M-%S'), 'start_time': start_time,
         'num_test_batches': args.num_batches, 'batch_size': args.bs, 'model_name': args.model, 'task': args.task,
-        'qps': args.num_batches * args.bs / (finish_time - start_time),
+        'num_threads': args.num_threads, 'qps': args.num_batches * args.bs * args.num_threads / (finish_time - start_time),
         'latency': latency_list,
     }
 
@@ -179,7 +194,9 @@ if __name__ == '__main__':
         args_.database_name) / (
                                   '_'.join([
                                       metrics['gpu_model_name'].replace(' ', '-'),
-                                      metrics["model_name"], f'bs{metrics["batch_size"]}'
+                                      metrics["model_name"], 
+                                      f'bs{metrics["batch_size"]}',
+                                      f'j{metrics["num_threads"]}',
                                   ]) + (f'_{args_.report_suffix}' if args_.report_suffix else '') + '.json'
                                   # f'_{metrics["test_time"]}.json'
                           )

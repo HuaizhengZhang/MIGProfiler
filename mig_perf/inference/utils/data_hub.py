@@ -2,8 +2,6 @@ import os
 from pathlib import Path
 
 from torch.utils.data import DataLoader, default_collate
-from torchvision import transforms, datasets
-from transformers import AutoTokenizer
 
 model_names = {
     'distil_v1': 'sentence-transformers/distiluse-base-multilingual-cased-v1',
@@ -32,6 +30,8 @@ def load_places365_data(
         data_root (str): eg. root/my_dataset/
         num_workers (int): number of pytorch DataLoader worker subprocess
     """
+    from torchvision import transforms, datasets
+
     traindir = os.path.join(data_root, 'train')
     valdir = os.path.join(data_root, 'val')
     normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
@@ -61,20 +61,30 @@ def load_places365_data(
     return train_loader, val_loader
 
 
-def _collate_fn(x, tokenizer, seq_length):
-    x = default_collate(x)
-    ret = tokenizer(x['review_body'], return_tensors='pt', padding=True, truncation=True, max_length=seq_length)
-    return ret
-
-
-def load_amazaon_review_data(model_name, seq_length, batch_size, num_workers=4):
+def load_amazon_review_data(tokenizer, batch_size, max_seq_len, num_workers=os.cpu_count()):
     from datasets import load_dataset
 
-    model_name = model_names[model_name]
     # prepare test data
-    tokenizer = AutoTokenizer.from_pretrained(model_name)
-    test_data, _ = load_dataset("amazon_reviews_multi", "all_languages", split=['train', 'test'])
-    dataloader = DataLoader(test_data, batch_size=batch_size,
-                            collate_fn=lambda x: _collate_fn(x, tokenizer, seq_length),
-                            num_workers=num_workers)
-    return dataloader
+    train_dataset, val_dataset = load_dataset("amazon_reviews_multi", "all_languages", split=['train', 'test'])
+
+    def collate_fn(x):
+        x = default_collate(x)
+        inputs = tokenizer(
+            x['review_body'], padding=True, truncation=True,
+            max_length=max_seq_len, return_tensors='pt',
+        )
+        inputs['labels'] = (x['stars'] - 1).long()
+        return inputs
+
+    train_dataloader = DataLoader(
+        train_dataset, batch_size=batch_size,
+        collate_fn=collate_fn,
+        num_workers=num_workers,
+    )
+    val_dataloader = DataLoader(
+        val_dataset, batch_size=batch_size,
+        collate_fn=collate_fn,
+        num_workers=num_workers,
+    )
+    return train_dataloader, val_dataloader
+
