@@ -107,6 +107,15 @@ See more benchmark experiments in [`./exp`](./exp).
 
 ## Cite Us 🌱
 
+```bibtex
+@article{zhang2022migperf,
+  title={MIGPerf: A Comprehensive Benchmark for Deep Learning Training and Inference Workloads on Multi-Instance GPUs},
+  author={Zhang, Huaizheng and Li, Yuanming and Xiao, Wencong and Huang, Yizheng and Di, Xing and Yin, Jianxiong and See, Simon and Luo, Yong and Lau, Chiew Tong and You, Yang},
+  journal={arXiv preprint arXiv:2301.00407},
+  year={2023}
+}
+```
+
 ## Contributors 👥
 
 - Yuanming Li
@@ -115,7 +124,7 @@ See more benchmark experiments in [`./exp`](./exp).
 - Xing Di
 
 ## Ackowledgement
-Special thanks to Aliyun and NVIDIA AI Tech center to provide MIG GPU server for benchmarking.
+Special thanks to Aliyun and NVIDIA AI Tech Center to provide MIG GPU server for benchmarking.
 
 ## License
 This repository is open-sourced under [MIT License](./LICENSE).
