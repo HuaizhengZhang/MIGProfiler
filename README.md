@@ -105,6 +105,11 @@ python client/block_infernece_cv.py --bs=32 --model=resnet50 --num_batches=500 -
 
 See more benchmark experiments in [`./exp`](./exp).
 
+### 3. Visualize
+
+- [x] in notebook
+- [ ] in Prometheus (under improvement)
+
 ## Cite Us 🌱
 
 ```bibtex
