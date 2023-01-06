@@ -9,13 +9,13 @@ MIGProfiler is featured for:
 - 📈 Present **comprehensive** benchmark results
 - 🐣 **Easy to use** with a configuration file (WIP)
 
-*The project is under rapid development! Please check our [benchmark results](#benchmark-result-📈) and join us!*
+*The project is under rapid development! Please check our [benchmark website](#benchmark-result-) and join us!*
 
-- [Benchmark Website](#benchmark-website-📈)
-- [Install](#install-📦️)
-- [Quick Start](#quick-start-🚚)
-- [Cite Us](#cite-us-🌱)
-- [Contributors](#contributors-👥)
+- [Benchmark Website](#benchmark-website-)
+- [Install](##install-%EF%B8%8F)
+- [Quick Start](#quick-start-)
+- [Cite Us](#cite-us-)
+- [Contributors](#contributors-)
 - [Acknowledgement](#ackowledgement)
 - [License](#license)
 
