@@ -23,9 +23,9 @@ MIGProfiler is featured for:
  Coming soon!
 
 ## Install 📦️
-
-### Manual install
-
+```
+git clone https://github.com/MLSysOps/MIGProfiler.git
+```
 Requirements:
 - PyTorch with CUDA
 - OpenCV
@@ -33,7 +33,7 @@ Requirements:
 - Transformers
 - Tqdm
 - Prometheus client
-
+### Manual environment build
 ```shell
 # create virtual environment
 conda create -n mig-perf python=3.8
@@ -46,8 +46,10 @@ pip install transformers
 pip install sanic tqdm prometheus_client
 ```
 
-### PyPI install
-WIP
+### PyPI environment build
+```
+pip install migperf
+```
 
 ### Use Docker
 WIP
@@ -76,7 +78,7 @@ Start to profile
 ```shell
 cd mig_perf/profiler
 export PYTHONPATH=$PWD
-python train/train_cv.py --bs=32 --model=resnet50 --num_batches=500 --mig-device-id=0
+python train/train_cv.py --bs=32 --model=resnet50 --mig-device-id=0 --max_train_steps=10 
 ```
 
 Remeber to disable MIG after finish benchmark
@@ -100,7 +102,7 @@ Start to profile
 ```shell
 cd mig_perf/profiler
 export PYTHONPATH=$PWD
-python client/block_infernece_cv.py --bs=32 --model=resnet50 --num_batches=500 --mig-device-id=0
+python client/block_inference_cv.py --bs=32 --model=resnet50 --num_batches=500 --mig-device-id=0
 ```
 
 See more benchmark experiments in [`./exp`](./exp).
