@@ -1,11 +1,3 @@
-'''
-Descripttion: 
-version: 
-Author: Yang Xiao(YXIAO009@e.ntu.edu.sg)
-Date: 2023-01-08 14:02:29
-LastEditors: Yang Xiao
-LastEditTime: 2023-01-08 15:32:40
-'''
 from setuptools import find_packages, setup
 
 # read the contents of README file
@@ -26,13 +18,13 @@ with open(path.join(this_directory, 'requirements.txt'), encoding='utf-16') as f
     requirements = f.read().splitlines()
 
 setup(
-    name='MIG Profiler',
-    version='0.0.4',
+    name='migperf',
+    version='0.0.1',
     description='Multi-Instance-GPU profiling tool',
     long_description=readme(),
     long_description_content_type='text/markdown',
-    author='Yizheng Huang',
-    author_email='huangyz0918@gmail.com',
+    author='Xing Di',
+    author_email='xing.cyrildi@gmail.com',
     url='https://github.com/MLSysOps/MIGProfiler',
     download_url='https://github.com/MLSysOps/MIGProfiler/archive/master.zip',
     keywords=['benchmark', 'deep learning', 'MLOps', 'neural networks'],
