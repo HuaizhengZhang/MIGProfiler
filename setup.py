@@ -14,7 +14,7 @@ def readme():
 
 
 # read the contents of requirements.txt
-with open(path.join(this_directory, 'requirements.txt'), encoding='utf-16') as f:
+with open(path.join(this_directory, 'requirements.txt'), encoding='utf-8') as f:
     requirements = f.read().splitlines()
 
 setup(
@@ -23,8 +23,8 @@ setup(
     description='Multi-Instance-GPU profiling tool',
     long_description=readme(),
     long_description_content_type='text/markdown',
-    author='Xing Di',
-    author_email='xing.cyrildi@gmail.com',
+    author='Huaizheng Zhang',
+    author_email='huaizheng@breezeml.ai',
     url='https://github.com/MLSysOps/MIGProfiler',
     download_url='https://github.com/MLSysOps/MIGProfiler/archive/master.zip',
     keywords=['benchmark', 'deep learning', 'MLOps', 'neural networks'],

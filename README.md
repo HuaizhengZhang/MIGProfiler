@@ -23,36 +23,39 @@ MIGProfiler is featured for:
  Coming soon!
 
 ## Install 📦️
-```
-git clone https://github.com/MLSysOps/MIGProfiler.git
-```
-Requirements:
-- PyTorch with CUDA
-- OpenCV
-- Sanic
-- Transformers
-- Tqdm
-- Prometheus client
-### Manual environment build
-```shell
-# create virtual environment
-conda create -n mig-perf python=3.8
-conda activate mig-perf
 
-# install required packages
-conda install pytorch torchvision pytorch-cuda=11.6 -c pytorch -c nvidia
-conda install -c conda-forge opencv
-pip install transformers
-pip install sanic tqdm prometheus_client
-```
-
-### PyPI environment build
+### Install by PyPI
 ```
 pip install migperf
 ```
+⚠️ For Deep Learning (DL) framework (PyTorch) and its task-specific DL libraries like Hugging Face Transformers and OpenCV, you may need self-installation, since these libraries have various dependencies for different users.
 
 ### Use Docker
 WIP
+
+### Manual build
+
+Clone the repo:
+```
+git clone https://github.com/MLSysOps/MIGProfiler.git
+```
+
+It is recommended to create a virtual environment for testing:
+```shell
+conda create -n mig-perf python=3.8
+conda activate mig-perf
+```
+Manually install the required packages (you should install the correct version):
+```shell
+conda install pytorch torchvision pytorch-cuda=11.6 -c pytorch -c nvidia
+conda install -c conda-forge opencv
+pip install transformers
+```
+
+Finally, build `migperf` package:
+```shell
+pip install .
+```
 
 ## Quick Start 🚚
 You can easily to profile on MIG GPU. Below are some common deep learning tasks to play with.
