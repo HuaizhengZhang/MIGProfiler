@@ -28,7 +28,7 @@ MIGProfiler is featured for:
 ```
 pip install migperf
 ```
-⚠️ For Deep Learning (DL) framework (PyTorch) and its task-specific DL libraries like Hugging Face Transformers and OpenCV, you may need self-installation, since these libraries have various dependencies for different users.
+⚠️ For Deep Learning (DL) framework ([PyTorch](https://pytorch.org/)) and its task-specific DL libraries like [Hugging Face Transformers](https://pypi.org/project/transformers/) and OpenCV, you may need self-installation, since these libraries have various dependencies for different users.
 
 ### Use Docker
 WIP
