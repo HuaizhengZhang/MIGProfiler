@@ -62,11 +62,14 @@ You can easily to profile on MIG GPU. Below are some common deep learning tasks 
 ### 1. MIG training benchmark
 
 We first create a `1g.10gb` MIG device
-```shell
+```python
+from migperf.controller import MIGController
 # enable MIG
-sudo nvidia-smi -i 0 -mig 1
-# create MIG instance
-sudo nvidia-smi mig -cgi 1g.10gb -C
+mig_controller = MIGController()
+mig_controller.enable_mig(gpu_id=0)
+# Create GPU instance
+gi_status = mig_controller.create_gpu_instance('1g.10gb', create_ci=True)
+print(gi_status)
 ```
 
 Start DCGM metric exporter
@@ -84,11 +87,14 @@ export PYTHONPATH=$PWD
 python train/train_cv.py --bs=32 --model=resnet50 --mig-device-id=0 --max_train_steps=10 
 ```
 
-Remeber to disable MIG after finish benchmark
-```shell
-sudo nvidia-smi -i 0 -dci
-sudo nvidia-smi -i 0 -dgi
-sudo nvidia-smi -i 0 -mig 0
+Clean up after benchmarking
+```python
+from migperf.controller import MIGController
+# disable MIG
+mig_controller = MIGController()
+mig_controller.destroy_compute_instance(gpu_id=0)
+mig_controller.destroy_gpu_instance(gpu_id=0)
+mig_controller.disable_mig(gpu_id=0)
 ```
 
 ### 2. MIG inference benchmark

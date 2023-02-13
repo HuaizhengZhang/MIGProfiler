@@ -1,13 +1,18 @@
 """
-refernce: https://github.com/nvidia/mig-parted
+Author: Li Yuanming
+Email: yuanmingleee@gmail.com
+Date: Dec 09, 2022
+
+MIG controller Python wrapper to create/destroy instances, query status for MIG-enabled GPU devices.
+
+References: https://github.com/nvidia/mig-parted
 """
 import re
 import subprocess
 from typing import List, Union
-import warnings
 
 
-class MIGController:
+class MIGController(object):
     CREATE_GI_PATTERN = re.compile(r'.+GPU instance ID\s+(\d+).+\s+(\d+).+(MIG\s+\d+g\.\d+gb)\s+\(ID\s+(\d+)')
     CREATE_CI_PATTERN = re.compile(
         r'.+compute instance ID\s+(\d+).+\s(\d+).+\s(\d+).+(MIG\s+\d+g\.\d+gb|MIG\s+\d+c\.\d+\.\d+gb)\s+\(ID\s+(\d+)'
@@ -83,7 +88,7 @@ class MIGController:
                     :code:`1g.10gb:0`, or :code:`15:0`: GI with profile 1/7 SM + 10gb memory placed at 0.
             gpu_id (int, optional): ID of the specified GPU to create the GPU instance.
                 Not specifying :code:`gpu_id` will result in create GPU instances on
-                every avaliable GPUs.
+                every available GPUs.
             create_ci (bool, optional): Create the default* compute instance 
                 after each GPU instance creation. Default to `False`.
         Returns:
@@ -98,7 +103,7 @@ class MIGController:
 
         cmd = ['sudo', 'nvidia-smi', 'mig', '-i', str(gpu_id), '-cgi', gi_profiles]
         if create_ci:
-            # Also create the corresponding Compute Instances (CI)
+            # Also create the corresponding compute Instances (CI)
             cmd.append('-C')
         p = subprocess.Popen(cmd, stdout=subprocess.PIPE, encoding='utf-8')
         output, _ = p.communicate()
@@ -127,14 +132,14 @@ class MIGController:
         :code:`sudo nvidia-smi mig -i ${gpu_id} -gi ${gi_id} -cci ${ci_profiles}`
         
         Args:
-            gi_profiles (str or list of str): Profile name / ID or a list of profile 
+            ci_profiles (str or list of str): Profile name / ID or a list of profile
                 names / IDs. If no profile name or ID is given, then the default*
                 compute instance profile ID will be used.
                 For example, 
                     :code:`1c.1g.10gb`, or :code:`0`: use 1/7 SM.
             gpu_id (int, optional): ID of the specified GPU to create the compute instance.
                 Not specifying :code:`gpu_id` will result in create compute instances on
-                every avaliable GPUs.
+                every available GPUs.
             gi_id (bool, optional): ID of the specified GPU instance to create 
                 the compute instance. Not specifying :code:`gi_id` will result in
                 create compute instances on every avaliable GPU instances.
@@ -289,7 +294,7 @@ if __name__ == '__main__':
     mig_controller = MIGController()
     mig_controller.enable_mig(0)
     print(mig_controller.check_mig_status(0))
-    gi_instances = mig_controller.create_gpu_instance(gpu_id=0, i_profiles='1g.10gb,1g.10gb')
+    gi_instances = mig_controller.create_gpu_instance(gi_profiles='1g.10gb,1g.10gb', gpu_id=0)
     print(gi_instances)
     print(mig_controller.check_gpu_instance_status(gpu_id=0))
     ci_instances = mig_controller.create_compute_instance(ci_profiles='1g.10gb')
