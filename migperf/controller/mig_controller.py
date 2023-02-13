@@ -1,12 +1,9 @@
 """
 refernce: https://github.com/nvidia/mig-parted
 """
+import re
 import subprocess
-import os
-from pathlib import Path
 from typing import List, Union
-
-SCRIPT_MIGRECONF = str(Path(os.getcwd())/"mig_reconfigure.sh")
 
 
 class MIGController:
@@ -23,14 +20,14 @@ class MIGController:
     @classmethod
     def check_mig_status(cls, gpu_id: int = None):
         """Execute command: nvidia-smi --query-gpu=mig.mode.current,mig.mode.pending --format=csv,noheader
-        
+
         Returns:
             A list of tuple, contains all GPU's current MIG status and pending MIG status if `gpu_id` is not specified.
             Or a tuple contains the specified GPU's current MIG status and pending MIG status if `gpu_id` is provided.
         """
         p = subprocess.Popen(
             [
-                'nvidia-smi', '--query-gpu=mig.mode.current,mig.mode.pending', 
+                'nvidia-smi', '--query-gpu=mig.mode.current,mig.mode.pending',
                 '--format=csv,noheader',
             ],
             stdout=subprocess.PIPE,
@@ -41,7 +38,8 @@ class MIGController:
         mig_status_list = list()
         for line in output.splitlines():
             current_state, pending_state = line.split(', ')
-            current_state, pending_state = (current_state == 'Enabled'), (pending_state == 'Enabled')
+            current_state, pending_state = (
+                current_state == 'Enabled'), (pending_state == 'Enabled')
             mig_status_list.append((current_state, pending_state))
         # select the intereted GPU ID
         if gpu_id is not None:
@@ -58,27 +56,94 @@ class MIGController:
             cmd.extend(['-i', str(gpu_id)])
         # Disable NVIDIA MIG
         return subprocess.call(cmd)
-    
+
     @classmethod
     def create_gpu_instance(cls, gpu_id: int, i_profiles: Union[str, List[str]], create_ci: bool = False):
         """sudo nvidia-smi mig -i ${gpu_id} -cgi ${i_profiles}"""
         if isinstance(i_profiles, list):
             i_profiles = ','.join(i_profiles)
-        
-        cmd = ['sudo', 'nvidia-smi', 'mig', '-i', str(gpu_id), '-cgi', i_profiles]
+
+        cmd = ['sudo', 'nvidia-smi', 'mig', '-i',
+               str(gpu_id), '-cgi', i_profiles]
         if create_ci:
             # Also create the corresponding Compute Instances (CI)
             cmd.append('-C')
         return subprocess.call(cmd)
-    
+
     @classmethod
     def create_compute_instance(cls, gi_id: int, ci_profiles: Union[str, List[str]]):
         """sudo nvidia-smi mig -gi ${gi_id} -cci ${ci_profiles}"""
         if isinstance(ci_profiles, list):
             ci_profiles = ','.join(ci_profiles)
-        
-        cmd = ['sudo', 'nvidia-smi', 'mig', '-gi', str(gi_id), '-cci', ci_profiles]
+
+        cmd = ['sudo', 'nvidia-smi', 'mig', '-gi',
+               str(gi_id), '-cci', ci_profiles]
         return subprocess.call(cmd)
+
+    @classmethod
+    def check_gpu_instance_status(cls, gpu_id: int = None):
+        """sudo nvidia-smi mig -lgi -i ${gpu_id}
+        
+        Returns: list of dict.
+            A list of GPU Instance status. Example: [{'gpu': 0, 'name': 'MIG 1g.10gb', 'profile_id': 19,
+                  'gi_id': 11, 'placement': {'start': 4, 'size': 1}}]
+        """
+        gi_pattern = re.compile(
+            r'\|\s+(\d+)\s+(MIG\s+\d+g\.\d+gb)\s+(\d+)\s+(\d+)\s+(\d+)\:(\d+)')
+        cmd = ['sudo', 'nvidia-smi', 'mig', '-lgi']
+        if gpu_id is not None:
+            cmd.extend(['-i', str(gpu_id)])
+
+        p = subprocess.Popen(
+            cmd,
+            stdout=subprocess.PIPE,
+            encoding='utf-8',
+        )
+        output, _ = p.communicate()
+        # parse output CSV string
+        gi_status_list = list()
+        for line in output.splitlines():
+            match_groups = gi_pattern.match(line)
+            if match_groups:
+                g_id, name, profile_id, gi_id, placement_start, placement_size = match_groups.groups()
+                gi_status_list.append({
+                    'gpu_id': g_id, 'name': name, 'profile_id': profile_id, 'gi_id': gi_id,
+                    'placement': {'start': placement_start, 'size': placement_size}
+                })
+        
+        return gi_status_list
+    
+    @classmethod
+    def check_compute_instance_status(cls, gpu_id: int = None, gi_id: int = None):
+        """sudo nvidia-smi -lci -i ${gpu_id} -gi ${gi_id}"""
+        status = {'gpu': 0, 'name': 'MIG 1g.10gb', 'profile_id': 19,
+                  'gi_id': 11, 'placement': {'start': 4, 'size': 1}}
+        ci_pattern = re.compile(
+            r'\|\s+(\d+)\s+(\d+)\s+(MIG\s+\d+g\.\d+gb|MIG\s+\d+c\.\d+g\.\d+gb)\s+(\d+)\s+(\d+)\s+(\d+)\:(\d+)'
+        )
+        cmd = ['sudo', 'nvidia-smi', 'mig', '-lci']
+        if gpu_id is not None:
+            cmd.extend(['-i', str(gpu_id)])
+        if gi_id is not None:
+            cmd.extend(['-gi', str(gi_id)])
+
+        p = subprocess.Popen(
+            cmd,
+            stdout=subprocess.PIPE,
+            encoding='utf-8',
+        )
+        output, _ = p.communicate()
+        # parse output CSV string
+        ci_status_list = list()
+        for line in output.splitlines():
+            match_groups = ci_pattern.match(line)
+            if match_groups:
+                g_id, gi_id, name, profile_id, ci_id, placement_start, placement_size = match_groups.groups()
+                ci_status_list.append({
+                    'gpu_id': g_id, 'gi_id': gi_id, 'name': name, 'profile_id': profile_id, 'ci_id': ci_id,
+                    'placement': {'start': placement_start, 'size': placement_size}
+                })
+        return ci_status_list
 
     @classmethod
     def destroy_gpu_instance(cls, gpu_id: int = None, gi_ids: Union[int, List[int]] = None):
@@ -91,7 +156,7 @@ class MIGController:
         if gpu_id is not None:
             cmd.extend(['-i', str(gpu_id)])
         return subprocess.call(cmd)
-    
+
     @classmethod
     def destroy_compute_instance(cls, gpu_id: int = None, gi_id: int = None, ci_ids: Union[int, List[int]] = None):
         """sudo nvidia-smi mig -dci -gi ${gi_id} -ci ${ci_ids} -i ${gpu_id}"""
@@ -113,7 +178,8 @@ if __name__ == '__main__':
     mig_controller.enable_mig(0)
     print(mig_controller.check_mig_status(0))
     mig_controller.create_gpu_instance(gpu_id=0, i_profiles='1g.10gb,1g.10gb', create_ci=True)
+    print(mig_controller.check_gpu_instance_status(gpu_id=0))
+    print(mig_controller.check_compute_instance_status(gpu_id=0))
     mig_controller.destroy_compute_instance(gpu_id=0)
     mig_controller.destroy_gpu_instance(gpu_id=0)
     mig_controller.disable_mig(0)
-
