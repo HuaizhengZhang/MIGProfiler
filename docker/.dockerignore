@@ -1,2 +1,7 @@
+.github/
+assets/
 data/
+
+*.json
 *.tar
+*.pem

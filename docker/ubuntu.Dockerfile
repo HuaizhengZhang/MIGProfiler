@@ -1,9 +1,19 @@
 FROM nvcr.io/nvidia/pytorch:22.10-py3
-COPY ./mig_perf ./mig_perf
-COPY ./requirements.txt ./requirements.txt
-WORKDIR ./
-RUN pip install -r requirements.txt -i https://pypi.mirrors.ustc.edu.cn/simple
-ENV PYTHONPATH ./
-ENV TORCH_HOME ./data/torch_models
-ENV HF_HOME ./data/huggingface
-ENTRYPOINT ["python", "mig_perf/profiler/profiler.py"]
+LABEL maintainer="Li Yuanming <yuanmingleee@gmail.com>"
+ENV PYTHONPATH /workspace
+
+WORKDIR /workspace
+
+# Install required packages
+RUN apt-get update && apt-get upgrade -y && apt-get clean
+RUN conda install -c conda-forge opencv && pip install --no-cache-dir transformers \
+    && conda clean -ya
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Build migperf
+COPY migperf migperf
+RUN pip install --no-cache-dir .
+
+ENTRYPOINT ["/bin/bash"]
