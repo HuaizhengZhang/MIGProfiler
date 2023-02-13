@@ -68,12 +68,35 @@ class MIGController:
         return subprocess.call(cmd)
 
     @classmethod
-    def create_gpu_instance(cls, gpu_id: int, i_profiles: Union[str, List[str]], create_ci: bool = False):
-        """sudo nvidia-smi mig -i ${gpu_id} -cgi ${i_profiles}"""
-        if isinstance(i_profiles, list):
-            i_profiles = ','.join(i_profiles)
+    def create_gpu_instance(cls, gi_profiles: Union[str, List[str]], gpu_id: int = None, create_ci: bool = False):
+        """Create GPU instance on MIG-enabled GPU device.
+        The function is equivalant to executing the command: 
+        :code:`sudo nvidia-smi mig -i ${gpu_id} -cgi ${gi_profiles}`
+        
+        Args:
+            gi_profiles (str or list of str): Profile tuple or a list of profile 
+                tuple. A profile tuple consists of 1. a profile name or ID and 
+                2. an optional placement specifier, which consists of a colon and a 
+                placement start index.
+                For example, 
+                    :code:`1g.10gb`, or :code:`15`: GI with profile 1/7 SM + 10gb memory.
+                    :code:`1g.10gb:0`, or :code:`15:0`: GI with profile 1/7 SM + 10gb memory placed at 0.
+            gpu_id (int, optional): ID of the specified GPU to create the GPU instance.
+                Not specifying :code:`gpu_id` will result in create GPU instances on
+                every avaliable GPUs.
+            create_ci (bool, optional): Create the default* compute instance 
+                after each GPU instance creation. Default to `False`.
+        Returns:
+            list of dict: A list of created GPU instance status.
+                The dictionary contains: :code:`gpu_id`, :code:`name`, 
+                :code:`profile_id`, and :code:`gi_id` (GPU instance ID).
+        Raises:
+            ValueError: If creating of the GPU instance fails.
+        """
+        if isinstance(gi_profiles, list):
+            gi_profiles = ','.join(gi_profiles)
 
-        cmd = ['sudo', 'nvidia-smi', 'mig', '-i', str(gpu_id), '-cgi', i_profiles]
+        cmd = ['sudo', 'nvidia-smi', 'mig', '-i', str(gpu_id), '-cgi', gi_profiles]
         if create_ci:
             # Also create the corresponding Compute Instances (CI)
             cmd.append('-C')
@@ -98,8 +121,30 @@ class MIGController:
         return gi_status_list
 
     @classmethod
-    def create_compute_instance(cls, gpu_id: int = None, gi_id: int = None, ci_profiles: Union[str, List[str]] = None):
-        """sudo nvidia-smi mig -gi ${gi_id} -cci ${ci_profiles}"""
+    def create_compute_instance(cls, ci_profiles: Union[str, List[str]] = None, gpu_id: int = None, gi_id: int = None):
+        """Create compute instance on MIG-enabled GPU device.
+        The function is equivalant to executing the command: 
+        :code:`sudo nvidia-smi mig -i ${gpu_id} -gi ${gi_id} -cci ${ci_profiles}`
+        
+        Args:
+            gi_profiles (str or list of str): Profile name / ID or a list of profile 
+                names / IDs. If no profile name or ID is given, then the default*
+                compute instance profile ID will be used.
+                For example, 
+                    :code:`1c.1g.10gb`, or :code:`0`: use 1/7 SM.
+            gpu_id (int, optional): ID of the specified GPU to create the compute instance.
+                Not specifying :code:`gpu_id` will result in create compute instances on
+                every avaliable GPUs.
+            gi_id (bool, optional): ID of the specified GPU instance to create 
+                the compute instance. Not specifying :code:`gi_id` will result in
+                create compute instances on every avaliable GPU instances.
+        Returns:
+            list of dict: A list of created GPU instance status.
+                The dictionary contains: :code:`gpu_id`, :code:`name`, 
+                :code:`profile_id`, and :code:`gi_id` (GPU instance ID).
+        Raises:
+            ValueError: If creating of the GPU instance fails.
+        """
         if isinstance(ci_profiles, list):
             ci_profiles = ','.join(ci_profiles)
 
@@ -220,6 +265,24 @@ class MIGController:
         if gpu_id is not None:
             cmd.extend(['-i', str(gpu_id)])
         return subprocess.call(cmd)
+    
+    @classmethod
+    def list_gpu_instance_profiles(gpu_id: int = None):
+        """sudo nvidia-smi -lgip -i ${gpu_id}"""
+        # TODO: list all GPU instance profiles
+        raise NotImplementedError()
+    
+    @classmethod
+    def list_gpu_instance_possible_placements(gpu_id: int = None):
+        """sudo nvidia-smi -lgipp -i ${gpu_id}"""
+        # TODO: list all GPU instance possible placement
+        raise NotImplementedError()
+    
+    @classmethod
+    def list_compute_instance_profiles(gpu_id: int = None, gi_id: int = None):
+        """sudo nvidia-smi -lcip -i ${gpu_id} -gi ${gi_id}"""
+        # TODO: list all compute instance profiles
+        raise NotImplementedError()
 
 
 if __name__ == '__main__':
