@@ -5,15 +5,14 @@ ENV PYTHONPATH /workspace
 WORKDIR /workspace
 
 # Install required packages
-RUN apt-get update && apt-get upgrade -y && apt-get clean
-RUN conda install -c conda-forge opencv && pip install --no-cache-dir transformers \
-    && conda clean -ya
+RUN pip install --no-cache-dir transformers -i https://pypi.mirrors.ustc.edu.cn/simple
 
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt -i https://pypi.mirrors.ustc.edu.cn/simple
 
 # Build migperf
-COPY migperf migperf
+RUN rm -r .
+COPY . .
 RUN pip install --no-cache-dir .
 
 ENTRYPOINT ["/bin/bash"]
