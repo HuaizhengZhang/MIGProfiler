@@ -272,34 +272,19 @@ class MIGController(object):
         return subprocess.call(cmd)
     
     @classmethod
-    def list_gpu_instance_profiles(gpu_id: int = None):
+    def list_gpu_instance_profiles(cls, gpu_id: int = None):
         """sudo nvidia-smi -lgip -i ${gpu_id}"""
         # TODO: list all GPU instance profiles
         raise NotImplementedError()
     
     @classmethod
-    def list_gpu_instance_possible_placements(gpu_id: int = None):
+    def list_gpu_instance_possible_placements(cls, gpu_id: int = None):
         """sudo nvidia-smi -lgipp -i ${gpu_id}"""
         # TODO: list all GPU instance possible placement
         raise NotImplementedError()
     
     @classmethod
-    def list_compute_instance_profiles(gpu_id: int = None, gi_id: int = None):
+    def list_compute_instance_profiles(cls, gpu_id: int = None, gi_id: int = None):
         """sudo nvidia-smi -lcip -i ${gpu_id} -gi ${gi_id}"""
         # TODO: list all compute instance profiles
         raise NotImplementedError()
-
-
-if __name__ == '__main__':
-    mig_controller = MIGController()
-    mig_controller.enable_mig(0)
-    print(mig_controller.check_mig_status(0))
-    gi_instances = mig_controller.create_gpu_instance(gi_profiles='1g.10gb,1g.10gb', gpu_id=0)
-    print(gi_instances)
-    print(mig_controller.check_gpu_instance_status(gpu_id=0))
-    ci_instances = mig_controller.create_compute_instance(ci_profiles='1g.10gb')
-    print(ci_instances)
-    print(mig_controller.check_compute_instance_status(gpu_id=0))
-    mig_controller.destroy_compute_instance(gpu_id=0)
-    mig_controller.destroy_gpu_instance(gpu_id=0)
-    mig_controller.disable_mig(0)
