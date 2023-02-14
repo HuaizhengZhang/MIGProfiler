@@ -11,7 +11,7 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt -i https://pypi.mirrors.ustc.edu.cn/simple
 
 # Build migperf
-RUN rm -r .
+RUN rm -r /workspace/*
 COPY . .
 RUN pip install --no-cache-dir .
 
