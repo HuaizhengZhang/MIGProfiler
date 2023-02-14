@@ -1,6 +1,6 @@
 # MIG Profiler
 
-![GitHub](https://img.shields.io/github/license/MLSysOps/MIGProfiler)
+![GitHub](https://img.shields.io/github/license/MLSysOps/MIGProfiler) ![Docker Pulls](https://img.shields.io/docker/pulls/mlsysops/migperf)
 
 MIGProfiler is a toolkit for benchmark study on NVIDIA [MIG](https://www.nvidia.com/en-sg/technologies/multi-instance-gpu/) techniques. It provides profiling on multiple deep learning training and inference tasks on MIG GPUs. 
 
@@ -24,14 +24,23 @@ MIGProfiler is featured for:
 
 ## Install 📦️
 
-### Install by PyPI
-```
+### Install by [PyPI](https://pypi.org/project/alaas/)
+```shell
 pip install migperf
 ```
 ⚠️ For Deep Learning (DL) framework ([PyTorch](https://pytorch.org/)) and its task-specific DL libraries like [Hugging Face Transformers](https://pypi.org/project/transformers/) and OpenCV, you may need self-installation, since these libraries have various dependencies for different users.
 
-### Use Docker
-WIP
+### Use [Docker](https://www.docker.com/) 🐋
+
+```shell
+docker pull mlsysops/migperf:latest
+```
+And start to profile by
+```shell
+docker run --gpus=all --network host --rm -ti mlsysops/migperf:latest
+```
+⚠️ Due to Docker device mounting mechanism, we are not able to adjust MIG configuration via `MIGController` inside
+docker. Please setup the MIG devices in the host machine before you start to profile.
 
 ### Manual build
 
