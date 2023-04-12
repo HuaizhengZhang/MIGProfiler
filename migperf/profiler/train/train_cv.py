@@ -20,10 +20,10 @@ from torch import nn
 from torch.backends import cudnn
 from tqdm.auto import tqdm
 
-from client.monitor import DCGMMetricCollector
-from utils.data_hub import load_places365_data, DEFAULT_DATASET_ROOT
-from utils.misc import get_ids_from_mig_device_id, get_gpu_device_uuid, consolidate_list_of_dict
-from utils.model_hub import load_pytorch_model
+from migperf.dcgm_exporter import DCGMMetricCollector
+from migperf.profiler.utils.data_hub import load_places365_data, DEFAULT_DATASET_ROOT
+from migperf.profiler.utils.misc import get_ids_from_mig_device_id, get_gpu_device_uuid, consolidate_list_of_dict
+from migperf.profiler.utils.model_hub import load_pytorch_model
 
 DATASET_PATH = str(DEFAULT_DATASET_ROOT / 'places365_standard')
 start_time = 0

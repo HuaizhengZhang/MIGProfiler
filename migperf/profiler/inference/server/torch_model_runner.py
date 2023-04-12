@@ -18,10 +18,10 @@ import numpy as np
 import torch
 import torch.hub
 
-from utils.logger import Logger
+from migperf.profiler.utils.logger import Logger
 # we only run 1 inference run at any time (one could schedule between several runners if desired)
-from utils.model_hub import load_pytorch_model
-from utils.pipeline_manager import PostProcessor, PreProcessor
+from migperf.profiler.utils.model_hub import load_pytorch_model
+from migperf.profiler.utils.pipeline_manager import PostProcessor, PreProcessor
 
 
 class Task(object):

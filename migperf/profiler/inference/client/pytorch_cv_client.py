@@ -59,12 +59,12 @@ import numpy as np
 import requests
 from tqdm import tqdm
 
-from client.monitor import DCGMMetricCollector
+from migperf.dcgm_exporter import DCGMMetricCollector
 from generator import WorkloadGenerator
-from utils.misc import consolidate_list_of_dict
-from utils.request import make_restful_request_from_numpy
+from migperf.profiler.utils.misc import consolidate_list_of_dict
+from migperf.profiler.utils.request import make_restful_request_from_numpy
 # from utils.logger import Printer
-from utils.pipeline_manager import PreProcessor
+from migperf.profiler.utils.pipeline_manager import PreProcessor
 
 DATA_PATH = str(Path(__file__).parent / 'n02124075_Egyptian_cat.jpg')
 SEED = 666

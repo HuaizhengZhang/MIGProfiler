@@ -18,10 +18,10 @@ import numpy as np
 import torch.cuda
 from tqdm import trange
 
-from client.monitor import DCGMMetricCollector
-from utils.misc import consolidate_list_of_dict, get_gpu_device_uuid, get_ids_from_mig_device_id
-from utils.model_hub import load_pytorch_model
-from utils.pipeline_manager import PreProcessor
+from migperf.dcgm_exporter import DCGMMetricCollector
+from migperf.profiler.utils.misc import consolidate_list_of_dict, get_gpu_device_uuid, get_ids_from_mig_device_id
+from migperf.profiler.utils.model_hub import load_pytorch_model
+from migperf.profiler.utils.pipeline_manager import PreProcessor
 
 TEXT_DATA = 'Material confined likewise it humanity raillery an unpacked as he Three ' \
             'chief merit no if. Now how her edward engage not horses Oh resolution he ' \

@@ -16,8 +16,8 @@ from sanic import Sanic
 from sanic.request import Request
 
 from torch_model_runner import ModelRunner
-from utils.request import decode_request_as_numpy
-from utils.logger import Logger
+from migperf.profiler.utils.request import decode_request_as_numpy
+from migperf.profiler.utils.logger import Logger
 
 logger = Logger(name='restful', welcome=False)
 
