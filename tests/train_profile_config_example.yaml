@@ -1,0 +1,30 @@
+# Description: Example of a training profile configuration file
+gpus:
+  id: 0
+  mig: true
+  mps: false
+  devices:
+    - gpu_instance_profile: 1g.10gb
+      task: cv_train
+task_config:
+  name: cv_train
+  type: train
+  ml_task: image_classification
+  dataset:
+    name: places365_standard
+    num_classes: 365
+  model:
+    name: resnet50
+    pretrained: true
+    loss: cross_entropy
+    optimizer:
+      name: sgd
+      lr: 0.01
+      momentum: 0.9
+      weight_decay: 0.0001
+    scheduler:
+      name: step_lr
+      step_size: 30
+      gamma: 0.1
+  batch_size: 64
+  max_train_steps: 100
