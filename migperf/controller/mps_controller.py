@@ -5,19 +5,28 @@ Date: Dec 09, 2022
 
 MPS Python wrapper to enable and disable MPS.
 """
+import os
 import subprocess
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from typing import List, Union
 
 
-def enable_mps():
+def enable_mps(gpu_ids: Union[int, List[int]] = None):
     """nvidia-cuda-mps-control -d"""
-    # Is MPS already enabled
-    if check_mps_status():
-        return
+    env = os.environ.copy()
+    # Concatenate CUDA_VISIBLE_DEVICES
+    if gpu_ids is not None:
+        if isinstance(gpu_ids, int):
+            gpu_ids = [gpu_ids]
+        env['CUDA_VISIBLE_DEVICES'] = ','.join(map(str, gpu_ids))
 
     # Enable NVIDIA MPS
     subprocess.call(
         ['nvidia-cuda-mps-control', '-d'], 
         stdout=subprocess.DEVNULL,
+        env=env,
     )
 
     return True
@@ -33,15 +42,20 @@ def check_mps_status():
     return return_code == 0
 
 
-def disable_mps():
+def disable_mps(gpu_ids: Union[int, List[int]] = None):
     """echo quit | nvidia-cuda-mps-control"""
-    if not check_mps_status():
-        return
+    env = os.environ.copy()
+    # Concatenate CUDA_VISIBLE_DEVICES
+    if gpu_ids is not None:
+        if isinstance(gpu_ids, int):
+            gpu_ids = [gpu_ids]
+        env['CUDA_VISIBLE_DEVICES'] = ','.join(map(str, gpu_ids))
 
     p = subprocess.Popen(    
         ['nvidia-cuda-mps-control'], 
         stdin=subprocess.PIPE, 
         stdout=subprocess.DEVNULL,
+        env=env,
     )
     p.communicate(input=b'quit')
     
